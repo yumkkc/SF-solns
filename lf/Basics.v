@@ -1871,9 +1871,9 @@ Definition modifier_comparison (m1 m2 : modifier) : comparison :=
 Definition grade_comparison (g1 g2 : grade) : comparison :=
   match g1, g2 with
   | Grade l1 m1, Grade l2 m2 => match letter_comparison l1 l2 with
-                               | Eq => modifier_comparison m1 m2
                                | Gt => Gt
                                | Lt => Lt
+                               | Eq => modifier_comparison m1 m2
                                end
   end.
 
@@ -1980,50 +1980,63 @@ Qed.
     cases.
 
     Our solution is under 10 lines of code total. *)
-Definition lower_grade (g : grade) : grade
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+
+Definition lower_grade (g : grade) : grade :=
+  match g with
+  | Grade l m => match m with
+                | Plus =>    Grade l Natural
+                | Natural => Grade l Minus
+                | Minus => match l with
+                          | F => Grade F Minus
+                          | _ => Grade (lower_letter l) Plus
+                          end
+                end
+  end.
+
+Compute lower_grade (Grade F Natural).
+
 
 Example lower_grade_A_Plus :
   lower_grade (Grade A Plus) = (Grade A Natural).
 Proof.
-(* FILL IN HERE *) Admitted.
+  simpl. reflexivity. Qed.
 
 Example lower_grade_A_Natural :
   lower_grade (Grade A Natural) = (Grade A Minus).
 Proof.
-(* FILL IN HERE *) Admitted.
+  simpl. reflexivity. Qed.
 
 Example lower_grade_A_Minus :
   lower_grade (Grade A Minus) = (Grade B Plus).
 Proof.
-(* FILL IN HERE *) Admitted.
+  simpl. reflexivity. Qed.
 
 Example lower_grade_B_Plus :
   lower_grade (Grade B Plus) = (Grade B Natural).
 Proof.
-(* FILL IN HERE *) Admitted.
+  simpl. reflexivity. Qed.
 
 Example lower_grade_F_Natural :
   lower_grade (Grade F Natural) = (Grade F Minus).
 Proof.
-(* FILL IN HERE *) Admitted.
+  simpl. reflexivity. Qed.
 
 Example lower_grade_twice :
   lower_grade (lower_grade (Grade B Minus)) = (Grade C Natural).
 Proof.
-(* FILL IN HERE *) Admitted.
+  simpl. reflexivity. Qed.
 
 Example lower_grade_thrice :
   lower_grade (lower_grade (lower_grade (Grade B Minus))) = (Grade C Minus).
 Proof.
-(* FILL IN HERE *) Admitted.
+  simpl. reflexivity. Qed.
 
 (** Coq makes no distinction between an [Example] and a [Theorem]. We
     state the following as a [Theorem] only as a hint that we will use
     it in proofs below. *)
 Theorem lower_grade_F_Minus : lower_grade (Grade F Minus) = (Grade F Minus).
 Proof.
-(* FILL IN HERE *) Admitted.
+  simpl. reflexivity. Qed.
 
 (* GRADE_THEOREM 0.25: lower_grade_A_Plus *)
 (* GRADE_THEOREM 0.25: lower_grade_A_Natural *)
@@ -2049,14 +2062,26 @@ Proof.
     in two cases.  The remaining case is the only one in which you
     need to destruct a [letter].  The case for [F] will probably
     benefit from [lower_grade_F_Minus].  *)
+Check grade_comparison.
+Check  letter_comparison_Eq.
+Check Grade.
+
 Theorem lower_grade_lowers :
   forall (g : grade),
     grade_comparison (Grade F Minus) g = Lt ->
     grade_comparison (lower_grade g) g = Lt.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros g H. destruct g. destruct m eqn:Em.
+  - simpl. rewrite -> letter_comparison_Eq. reflexivity.
+  - simpl. rewrite -> letter_comparison_Eq. reflexivity.
+  - destruct l eqn:El.
+    +  reflexivity.
+    +  reflexivity.
+    +  reflexivity.
+    +  reflexivity.
+    + rewrite -> lower_grade_F_Minus. rewrite <- H. reflexivity.
+      Qed.
 
-(** [] *)
 
 (** Now that we have implemented and tested a function that lowers a
     grade by one step, we can implement a specific late-days policy.
@@ -2110,7 +2135,9 @@ Theorem no_penalty_for_mostly_on_time :
     (late_days <? 9 = true) ->
     apply_late_policy late_days g = g.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros late_days g H.
+  rewrite -> apply_late_policy_unfold.
+  rewrite -> H. reflexivity. Qed.
 
 (** [] *)
 
@@ -2124,8 +2151,9 @@ Theorem grade_lowered_once :
     (late_days <? 17 = true) ->
     (apply_late_policy late_days g) = (lower_grade g).
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+ intros late_days g H1 H2.
+ rewrite -> apply_late_policy_unfold.
+ rewrite -> H1. rewrite -> H2. reflexivity. Qed.
 (** [] *)
 End LateDays.
 
