@@ -1693,8 +1693,6 @@ Qed.
     to the previous one but where the second hypothesis says that the
     function [f] has the property that [f x = negb x]. *)
 
-Check negb.
-
 Theorem negation_fn_applied_twice :
   forall (f : bool -> bool ),
     (forall (x: bool), f x = negb x) ->
@@ -1722,7 +1720,10 @@ Theorem andb_eq_orb :
   (andb b c = orb b c) ->
   b = c.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros b c. destruct b eqn:Eb.
+  - simpl. intros H1. rewrite H1. reflexivity.
+  - simpl. intros H1. rewrite H1. reflexivity.
+Qed.
 
 (** [] *)
 
@@ -1736,6 +1737,9 @@ Proof.
     In the next series of problems, we model this situation using the
     features of Coq that we have seen so far and prove some simple
     facts about this grading policy.  *)
+
+Qed.
+
 
 Module LateDays.
 
@@ -1822,10 +1826,18 @@ Compute letter_comparison B F.
     [letter_comparison] function does indeed give the result [Eq] when
     comparing a letter [l] against itself.  *)
 (** **** Exercise: 1 star, standard (letter_comparison) *)
+
 Theorem letter_comparison_Eq :
   forall l, letter_comparison l l = Eq.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros [].
+  - reflexivity.
+  - reflexivity.
+  - reflexivity.
+  - reflexivity.
+  - reflexivity.
+    Qed.
+
 (** [] *)
 
 (** We can follow the same strategy to define the comparison operation
@@ -1856,27 +1868,34 @@ Definition modifier_comparison (m1 m2 : modifier) : comparison :=
     of a suitable call to [letter_comparison] to end up with just [3]
     possibilities. *)
 
-Definition grade_comparison (g1 g2 : grade) : comparison
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition grade_comparison (g1 g2 : grade) : comparison :=
+  match g1, g2 with
+  | Grade l1 m1, Grade l2 m2 => match letter_comparison l1 l2 with
+                               | Eq => modifier_comparison m1 m2
+                               | Gt => Gt
+                               | Lt => Lt
+                               end
+  end.
+
 
 (** The following "unit tests" of your [grade_comparison] function
     should pass once you have defined it correctly. *)
 
 Example test_grade_comparison1 :
   (grade_comparison (Grade A Minus) (Grade B Plus)) = Gt.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example test_grade_comparison2 :
   (grade_comparison (Grade A Minus) (Grade A Plus)) = Lt.
-(* FILL IN HERE *) Admitted.
+Proof. simpl. reflexivity. Qed.
 
 Example test_grade_comparison3 :
   (grade_comparison (Grade F Plus) (Grade F Plus)) = Eq.
-(* FILL IN HERE *) Admitted.
+Proof. simpl. reflexivity. Qed.
 
 Example test_grade_comparison4 :
   (grade_comparison (Grade B Minus) (Grade C Plus)) = Gt.
-(* FILL IN HERE *) Admitted.
+Proof. simpl. reflexivity. Qed.
 
 (** [] *)
 
@@ -1934,8 +1953,14 @@ Theorem lower_letter_lowers:
     letter_comparison F l = Lt ->
     letter_comparison (lower_letter l) l = Lt.
 Proof.
-(* FILL IN HERE *) Admitted.
-
+  intros l H.
+  rewrite <- H. destruct l.
+  - simpl. reflexivity.
+  - simpl. reflexivity.
+  - simpl. reflexivity.
+  - simpl. reflexivity.
+  - simpl. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (lower_grade)
