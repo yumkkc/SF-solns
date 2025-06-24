@@ -1377,31 +1377,6 @@ Proof.
     negation is involutive -- i.e., that negation is its own
     inverse. *)
 
-Inductive test_O : Type :=
-| Mon
-| Tue
-| Wed
-.
-
-Fixpoint next_test_O (n : test_O) :test_O :=
-    match n with
-    | Mon => Tue
-    | Tue => Wed
-    | Wed => Mon
-    end.
-
-Compute next_test_O Mon.
-
-Theorem next_testing : forall b : test_O,
-    next_test_O (next_test_O (next_test_O b)) = b.
-
-Proof.
-  intros b. destruct b eqn:E.
-  - simpl. reflexivity.
-  - simpl. reflexivity.
-  - reflexivity.
-Qed.
-
 
 Theorem negb_involutive : forall b : bool,
   negb (negb b) = b.
@@ -2197,11 +2172,23 @@ Inductive bin : Type :=
     for binary numbers, and a function [bin_to_nat] to convert
     binary numbers to unary numbers. *)
 
-Fixpoint incr (m:bin) : bin
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Fixpoint incr (m:bin) : bin :=
+  match m with
+  | Z    =>   B1 Z
+  | B0 r =>  B1 r
+  | B1 r => B0 (incr r)
+  end.
 
-Fixpoint bin_to_nat (m:bin) : nat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Check mult.
+
+Fixpoint bin_to_nat (m:bin) : nat :=
+  match m with
+  | Z =>  0
+  | B0 r => 2 * (bin_to_nat r)
+  | B1 r => 2 * (bin_to_nat r) + 1
+  end.
+
+Compute bin_to_nat (B0 (B1 Z)).
 
 (** The following "unit tests" of your increment and binary-to-unary
     functions should pass after you have defined those functions correctly.
@@ -2210,24 +2197,25 @@ Fixpoint bin_to_nat (m:bin) : nat
     next chapter. *)
 
 Example test_bin_incr1 : (incr (B1 Z)) = B0 (B1 Z).
-(* FILL IN HERE *) Admitted.
+simpl. reflexivity. Qed.
 
 Example test_bin_incr2 : (incr (B0 (B1 Z))) = B1 (B1 Z).
-(* FILL IN HERE *) Admitted.
+simpl. reflexivity. Qed.
 
 Example test_bin_incr3 : (incr (B1 (B1 Z))) = B0 (B0 (B1 Z)).
-(* FILL IN HERE *) Admitted.
+simpl. reflexivity. Qed.
 
 Example test_bin_incr4 : bin_to_nat (B0 (B1 Z)) = 2.
-(* FILL IN HERE *) Admitted.
+simpl. reflexivity. Qed.
+
 
 Example test_bin_incr5 :
         bin_to_nat (incr (B1 Z)) = 1 + bin_to_nat (B1 Z).
-(* FILL IN HERE *) Admitted.
+simpl. reflexivity. Qed.
 
 Example test_bin_incr6 :
         bin_to_nat (incr (incr (B1 Z))) = 2 + bin_to_nat (B1 Z).
-(* FILL IN HERE *) Admitted.
+simpl. reflexivity. Qed.
 
 (** [] *)
 
