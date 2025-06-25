@@ -8,6 +8,7 @@
 
 From LF Require Export Basics.
 
+
 (** For this [Require] command to work, Coq needs to be able to
     find a compiled version of the previous chapter ([Basics.v]).
     This compiled version, called [Basics.vo], is analogous to the
@@ -242,7 +243,10 @@ Proof.
 Theorem mul_0_r : forall n:nat,
   n * 0 = 0.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n. induction n as [| n' IHn'].
+  - reflexivity.
+  - simpl. rewrite -> IHn'. reflexivity. Qed.
+
 
 Theorem plus_n_Sm : forall n m : nat,
   S (n + m) = n + (S m).
