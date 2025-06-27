@@ -730,7 +730,14 @@ Proof.
 Theorem add_shuffle3' : forall n m p : nat,
   n + (m + p) = m + (n + p).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m p.
+  rewrite add_comm.
+  replace (n + p) with (p + n).
+  - rewrite add_assoc. reflexivity.
+  - rewrite add_comm. reflexivity.
+  Qed.
+
+
 (** [] *)
 
 (* ################################################################# *)
@@ -748,11 +755,22 @@ Inductive bin : Type :=
     from [Basics].  That will make it possible for this file to
     be graded on its own. *)
 
-Fixpoint incr (m:bin) : bin
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Fixpoint incr (m:bin) : bin :=
+    match m with
+  | Z    =>   B1 Z
+  | B0 r =>  B1 r
+  | B1 r => B0 (incr r)
+  end.
 
-Fixpoint bin_to_nat (m:bin) : nat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+
+Fixpoint bin_to_nat (m:bin) : nat :=
+    match m with
+  | Z =>  0
+  | B0 r => 2 * (bin_to_nat r)
+  | B1 r => 2 * (bin_to_nat r) + 1
+  end.
+
+
 
 (** In [Basics], we did some unit testing of [bin_to_nat], but we
     didn't prove its correctness. Now we'll do so. *)
@@ -777,12 +795,31 @@ Fixpoint bin_to_nat (m:bin) : nat
     If you want to change your previous definitions of [incr] or [bin_to_nat]
     to make the property easier to prove, feel free to do so! *)
 
+Theorem bin_nat_0_r : forall b : bin,
+    bin_to_nat b + 0 = bin_to_nat b.
+  Proof. intros b.
+    rewrite add_comm. simpl. reflexivity.
+    Qed.
+
+
 Theorem bin_to_nat_pres_incr : forall b : bin,
   bin_to_nat (incr b) = 1 + bin_to_nat b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros b. induction b as [| b0' IHb0'| b1' IHb1'].
+  - simpl. reflexivity.
+  - simpl.
+    rewrite bin_nat_0_r. rewrite add_comm. simpl. reflexivity.
+  - simpl.
+    rewrite IHb1'. rewrite bin_nat_0_r.
+    replace (bin_to_nat b1' + bin_to_nat b1' + 1) with (1 + bin_to_nat b1' + bin_to_nat b1').
+    + simpl. rewrite bin_nat_0_r. rewrite add_comm. reflexivity.
+    + rewrite add_comm.
+      rewrite add_shuffle3.
+      rewrite add_comm.
+      reflexivity.
+Qed.
 
-(** [] *)
+    (** [] *)
 
 (** **** Exercise: 3 stars, standard (nat_bin_nat) *)
 
