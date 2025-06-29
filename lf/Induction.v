@@ -579,11 +579,11 @@ Definition manual_grade_for_eqb_refl_informal : option (nat*string) := None.
 Theorem add_shuffle3 : forall n m p : nat,
   n + (m + p) = m + (n + p).
 Proof.
-  intros m n p. rewrite add_comm.
+  intros n m p. rewrite add_comm.
   rewrite <- add_assoc.
-  assert (H: p + m = m + p).
-  {rewrite add_comm. reflexivity.}
-  rewrite H. reflexivity.
+  assert (H: p + n = n + p).
+  +rewrite add_comm. reflexivity.
+  +rewrite H. reflexivity.
   Qed.
 
 
@@ -602,9 +602,8 @@ Proof.
   simpl. rewrite <- IHm'.
   rewrite add_shuffle3.
   assert (H: m' + m' * n = m' * n + m').
-  {rewrite add_comm. reflexivity.}
-  rewrite H.
-  reflexivity.
+    +rewrite add_comm. reflexivity.
+    + rewrite H. reflexivity.
 Qed.
 
 
@@ -828,12 +827,8 @@ Qed.
 Fixpoint nat_to_bin (n:nat) : bin :=
   match n with
   | 0 => Z
-  | S 0 => B1 Z
-  | S (S n') => nat_to_bin (n')
+  | S n' => incr (nat_to_bin n')
   end.
-
-Compute nat_to_bin 3.
-
 
 (** Prove that, if we start with any [nat], convert it to [bin], and
     convert it back, we get the same [nat] which we started with.
@@ -847,7 +842,12 @@ Compute nat_to_bin 3.
 
 Theorem nat_bin_nat : forall n, bin_to_nat (nat_to_bin n) = n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n.
+  induction n as [| n' IHn'].
+  - simpl. reflexivity.
+  - simpl. rewrite bin_to_nat_pres_incr.
+    simpl. rewrite IHn'. reflexivity.
+    Qed.
 
 (** [] *)
 
@@ -858,8 +858,8 @@ Proof.
     then converting back to [bin] -- turns out to be problematic. That
     is, the following theorem does not hold. *)
 
-Theorem bin_nat_bin_fails : forall b, nat_to_bin (bin_to_nat b) = b.
-Abort.
+(*Theorem bin_nat_bin_fails : forall b, nat_to_bin (bin_to_nat b) = b.
+    Admitted. *)
 
 (** Let's explore why that theorem fails, and how to prove a modified
     version of it. We'll start with some lemmas that might seem
@@ -872,31 +872,64 @@ Abort.
 
 Lemma double_incr : forall n : nat, double (S n) = S (S (double n)).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n.
+  induction n as [| n' IHn'].
+  - simpl. reflexivity.
+  - rewrite IHn'. simpl. reflexivity.
+    Qed.
 
 (** Now define a similar doubling function for [bin]. *)
 
-Definition double_bin (b:bin) : bin
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+(** 2 => 10
+    4 => 100
+
+    5 => 101
+    10 => 1010
+
+    3 => 11
+    6 => 110
+
+ *)
+Definition double_bin (b:bin) : bin :=
+  match b with
+  | Z => Z
+  | n => B0 n
+  end.
+
 
 (** Check that your function correctly doubles zero. *)
 
-Example double_bin_zero : double_bin Z = Z.
-(* FILL IN HERE *) Admitted.
 
+Example double_bin_zero : double_bin Z = Z.
+Proof.
+ simpl. reflexivity.
+Qed.
+
+Example double_bin_four : double_bin (B0 (B1 Z))  = (B0 (B0 (B1 Z))).
+Proof.
+ simpl. reflexivity.
+Qed.
 (** Prove this lemma, which corresponds to [double_incr]. *)
 
 Lemma double_incr_bin : forall b,
     double_bin (incr b) = incr (incr (double_bin b)).
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  intros b.
+  induction b as [| b' IHb' | c' IHc'].
+  - simpl. reflexivity.
+  - simpl. reflexivity.
+  - simpl. reflexivity.
+Qed.
 (** [] *)
 
 (** Let's return to our desired theorem: *)
 
+Compute nat_to_bin (bin_to_nat (B0 Z)).
+Compute bin_to_nat (B1(B0 Z)).
+Compute bin_to_nat (B1 (B0 (B0 Z))).
+
 Theorem bin_nat_bin_fails : forall b, nat_to_bin (bin_to_nat b) = b.
-Abort.
+Admitted.
 
 (** The theorem fails because there are some [bin] such that we won't
     necessarily get back to the _original_ [bin], but instead to an
@@ -910,7 +943,26 @@ Abort.
     [double_bin] that might have failed to satisfy [double_bin_zero]
     yet otherwise seem correct. *)
 
-(* FILL IN HERE *)
+
+(*
+Compute bin_to_nat (B0 Z). --- i
+Compute nat_to_bin 0. ---------ii
+
+B0 Z is equivalent to Z
+This fails because of this. The (i) compute as 0 but (ii) computes as just Z
+
+Compute nat_to_bin (bin_to_nat (B0 Z)). ==> Z != (B0 Z)
+
+because of this behaviour, not even 0 but many might be different.
+
+Example B1(B0 Z) equivalent to B1 (B0 (B0 Z)) => both are 1
+
+Compute bin_to_nat (B1(B0 Z)).
+Compute bin_to_nat (B1 (B0 (B0 Z))).
+
+gives same result but has different representation. This cannot be proved.
+
+*)
 
 (** To solve that problem, we can introduce a _normalization_ function
     that selects the simplest [bin] out of all the equivalent
@@ -926,15 +978,27 @@ Abort.
     Hint: Structure the recursion such that it _always_ reaches the
     end of the [bin] and process each bit only once. Do not try to
     "look ahead" at future bits. *)
+Compute double_bin (B1 (B1 (B0 Z))).
 
-Fixpoint normalize (b:bin) : bin
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Fixpoint normalize (b:bin) : bin :=
+  match b with
+  | Z => Z
+  | B0 b' => match normalize b' with
+            | Z => Z
+            | a => double_bin a
+            end
+  | B1 b' => B1 (normalize b')
+  end.
 
+Compute normalize (B0 (B1 (B0 (B0 Z)))).
 (** It would be wise to do some [Example] proofs to check that your definition of
     [normalize] works the way you intend before you proceed. They won't be graded,
     but fill them in below. *)
 
 (* FILL IN HERE *)
+Example test_normalize_1: normalize (B0 (B1 (B0 (B0 Z)))) = B0 (B1 Z).
+Proof. simpl. reflexivity.
+Qed.
 
 (** Finally, prove the main theorem. The inductive cases could be a
     bit tricky.
@@ -947,7 +1011,12 @@ Fixpoint normalize (b:bin) : bin
 
 Theorem bin_nat_bin : forall b, nat_to_bin (bin_to_nat b) = normalize b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros b.
+  induction b as [| b' IHb' | b'' IHb''].
+  - simpl. reflexivity.
+  - simpl. rewrite bin_nat_0_r.
+    Admitted.
+
 
 (** [] *)
 
