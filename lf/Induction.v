@@ -983,10 +983,7 @@ Compute double_bin (B1 (B1 (B0 Z))).
 Fixpoint normalize (b:bin) : bin :=
   match b with
   | Z => Z
-  | B0 b' => match normalize b' with
-            | Z => Z
-            | a => double_bin a
-            end
+  | B0 b' => double_bin (normalize b')
   | B1 b' => B1 (normalize b')
   end.
 
@@ -1009,13 +1006,44 @@ Qed.
     progress. We have one lemma for the [B0] case (which also makes
     use of [double_incr_bin]) and another for the [B1] case. *)
 
+Lemma nat_to_bin_double: forall b, nat_to_bin (double b) = double_bin (nat_to_bin b).
+  Proof.
+    intros b.
+    induction b as [| b' IHb'].
+    - simpl. reflexivity.
+    - simpl. rewrite double_incr_bin.
+      rewrite IHb'.
+      reflexivity.
+  Qed.
+
+Lemma double_bin_incr: forall b, B1 b = incr(double_bin b).
+  Proof.
+    intros b.
+    induction b as [| b' IHb' | c' IHc'].
+    - simpl. reflexivity.
+    - simpl. reflexivity.
+    - simpl. reflexivity.
+  Qed.
+
+
 Theorem bin_nat_bin : forall b, nat_to_bin (bin_to_nat b) = normalize b.
 Proof.
   intros b.
-  induction b as [| b' IHb' | b'' IHb''].
+  induction b as [| b' IHb' | c' IHc'].
   - simpl. reflexivity.
   - simpl. rewrite bin_nat_0_r.
-    Admitted.
+    rewrite <- IHb'.
+    rewrite <- double_plus.
+    rewrite nat_to_bin_double.
+    reflexivity.
+  - simpl. rewrite bin_nat_0_r.
+    rewrite <- IHc'.
+    rewrite <- double_plus.
+    rewrite add_comm.
+    simpl. rewrite double_bin_incr.
+    rewrite <- nat_to_bin_double.
+    reflexivity.
+Qed.
 
 
 (** [] *)
