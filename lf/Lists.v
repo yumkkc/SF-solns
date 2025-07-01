@@ -535,6 +535,7 @@ Example test_included2:              included [1;2;2] [2;1;4;1] = false.
 Proof. simpl. reflexivity. Qed.
 (** [] *)
 
+
 (** **** Exercise: 2 stars, standard, especially useful (add_inc_count)
 
     Adding a value to a bag should increase the value's count by one.
@@ -831,7 +832,7 @@ Proof.
     reflexivity.
   - (* l = cons *)
     simpl. rewrite -> app_length.
-    simpl. rewrite -> IHl'. rewrite add_comm.
+    simpl.  rewrite -> IHl'. rewrite add_comm.
     reflexivity.
 Qed.
 
