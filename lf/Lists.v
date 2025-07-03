@@ -437,7 +437,7 @@ Proof. reflexivity. Qed.
     already-defined function, without changing the header. *)
 
 
-Definition sum : bag -> bag -> bag := alternate.
+Definition sum : bag -> bag -> bag := app.
 
 Example test_sum1:              count 1 (sum [1;2;3] [1;4;1]) = 3.
 Proof. simpl. reflexivity. Qed.
@@ -1107,13 +1107,22 @@ Qed.
     arbitrary expressions, not just simple identifiers.)
 *)
 
-Theorem bag_count_sum: forall (b1 b2 : bag) (n: nat),
-    (count n (sum b1 b2)) = (count n b1) + (count n b2).
+
+Theorem bag_count_sum: forall (s1 s2 : bag), forall (n: nat),
+    count n (sum s1 s2) = (count n s1) + (count n s2).
 Proof.
-  intros b1 b2 n.
+  intros s1 s2 n.
+  induction s1 as [| n' s1' IHs1'].
+  - simpl. reflexivity.
+  - simpl.
+    destruct (n' =? n) eqn:E.
+    + simpl. rewrite <- IHs1'. reflexivity.
+
+ 
+ 
 
 
-
+Search (_ + 0).
 
 (** **** Exercise: 3 stars, advanced (involution_injective) *)
 
@@ -1126,7 +1135,9 @@ Proof.
 Theorem involution_injective : forall (f : nat -> nat),
     (forall n : nat, n = f (f n)) -> (forall n1 n2 : nat, f n1 = f n2 -> n1 = n2).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros f H1 n1 n2 H2.
+  Admitted
+
 
 (** [] *)
 
