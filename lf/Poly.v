@@ -76,6 +76,8 @@ Check (nil nat) : list nat.
 
 Check (cons nat 3 (nil nat)) : list nat.
 
+Check (cons nat 2 (nil nat)).
+
 (** What might the type of [nil] be? We can read off the type
     [list X] from the definition, but this omits the binding for [X]
     which is the parameter to [list]. [Type -> list X] does not
@@ -142,9 +144,16 @@ Inductive mumble : Type :=
   | b (x : mumble) (y : nat)
   | c.
 
+Check a.
+Check (b (b a 2) 2).
+
 Inductive grumble (X:Type) : Type :=
   | d (m : mumble)
   | e (x : X).
+
+Check e nat 2.
+Check d nat (b (b a 2) 2).
+
 
 (** Which of the following are well-typed elements of [grumble X] for
     some type [X]?  (Add YES or NO to each line.)
@@ -155,7 +164,16 @@ Inductive grumble (X:Type) : Type :=
       - [e mumble (b c 0)]
       - [e bool (b c 0)]
       - [c]  *)
-(* FILL IN HERE *)
+(*
+  - NO [beacuse no type parameter passed]
+  - YES [mumble passed as a type param]
+  - NO [boolean as a type] but second expects mumble
+  - [e bool true] => YES
+  - [e mumble (b c 0)] => YES
+  - [e bool (b c 0)] => NO because B is parametrized but a mumble is passed
+  - c is not a grumble
+*)
+
 End MumbleGrumble.
 (** [] *)
 
@@ -374,6 +392,7 @@ Notation "x ++ y" := (app x y)
 (** Now lists can be written just the way we'd hope: *)
 
 Definition list123''' := [1; 2; 3].
+
 
 (* ----------------------------------------------------------------- *)
 (** *** Exercises *)
