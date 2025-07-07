@@ -945,8 +945,7 @@ Proof. reflexivity. Qed.
     situation where it would be useful for [X] and [Y] to be
     different? *)
 
-(* FILL IN HERE
-
+(* We need it to be different to get the different results.
     [] *)
 
 (* ================================================================= *)
