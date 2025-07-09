@@ -584,10 +584,7 @@ Fixpoint nth_error {X : Type} (l : list X) (n : nat)
                    : option X :=
   match l with
   | nil => None
-  | a :: l' => match n with
-               | O => Some a
-               | S n' => nth_error l' n'
-               end
+  | a :: l' => if (n =? 0) then Some a else (nth_error l' (pred n))
   end.
 
 Example test_nth_error1 : nth_error [4;5;6;7] 0 = Some 4.
@@ -1020,23 +1017,36 @@ Proof. reflexivity. Qed.
 Theorem fold_length_correct : forall X (l : list X),
   fold_length l = length l.
 Proof.
-(* FILL IN HERE *) Admitted.
-(** [] *)
+  intros. induction l as [| m l' IH'l].
+  - reflexivity.
+  - simpl. rewrite <- IH'l.
+    reflexivity.
+    Qed.
+
 
 (** **** Exercise: 3 stars, standard (fold_map)
 
     We can also define [map] in terms of [fold].  Finish [fold_map]
     below. *)
 
-Definition fold_map {X Y: Type} (f: X -> Y) (l: list X) : list Y
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition fold_map {X Y: Type} (f: X -> Y) (l: list X) : list Y :=
+  fold (fun x ls => (f x) :: ls) l nil.
+
+Compute fold_map (fun x => x + 1) [1;2;3].
 
 (** Write down a theorem [fold_map_correct] stating that [fold_map] is
     correct, and prove it in Coq.  (Hint: again, remember that
     [reflexivity] simplifies expressions a bit more aggressively than
     [simpl].) *)
 
-(* FILL IN HERE *)
+Theorem fold_map_correct : forall X Y (f: X -> Y) (l : list X),
+    fold_map f l = map f l.
+Proof. intros.
+       induction l as [| m l'].
+       - simpl. reflexivity.
+       - simpl. rewrite <- IHl'.
+         reflexivity.
+Qed.
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_fold_map : option (nat*string) := None.
@@ -1074,8 +1084,12 @@ Definition prod_curry {X Y Z : Type}
     the theorems below to show that the two are inverses. *)
 
 Definition prod_uncurry {X Y Z : Type}
-  (f : X -> Y -> Z) (p : X * Y) : Z
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+  (f : X -> Y -> Z) (p : X * Y) : Z := f (fst p) (snd p).
+
+Definition add_test {X: Type}
+  (x: X) (y: X -> X) := x.
+
+Check @add_test.
 
 (** As a (trivial) example of the usefulness of currying, we can use it
     to shorten one of the examples that we saw above: *)
@@ -1094,13 +1108,14 @@ Theorem uncurry_curry : forall (X Y Z : Type)
                         x y,
   prod_curry (prod_uncurry f) x y = f x y.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. reflexivity.
+  Qed.
 
 Theorem curry_uncurry : forall (X Y Z : Type)
                         (f : (X * Y) -> Z) (p : X * Y),
   prod_uncurry (prod_curry f) p = f p.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. destruct p. reflexivity. Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced (nth_error_informal)
@@ -1118,10 +1133,37 @@ Proof.
    forall X l n, length l = n -> @nth_error X l n = None
 
    Make sure to state the induction hypothesis _explicitly_.
-*)
-(* FILL IN HERE *)
 
-(* Do not modify the following line: *)
+Theorem: Forall Type X, List X l and Nat n,
+if length l = n then nth_error l n = None
+
+base case:
+    take l = [], then by definition of nth_error, nth_error [] n = None
+
+Take l = a :: l' such that
+
+length l' = n -> nth_error l' n = None (inductive case)
+
+we must show,
+
+length a::l' = m -> nth_error a::l' m = None
+
+let length a::l' = m
+
+=> length a::l' = 1 + length l'  (by length definition)
+
+1 + length l' = m
+
+=> length l' = m - 1
+By inductive hypothesis, nth_error l' (m - 1) = None **
+
+Now,
+nth_error a::l' m  = nth_error l' (m - 1) (by definition of nth_error)
+= None
+
+
+*)
+
 Definition manual_grade_for_informal_proof : option (nat*string) := None.
 (** [] *)
 
@@ -1210,17 +1252,18 @@ Proof. reflexivity. Qed.
     => f^n x] as input, [scc] should produce [fun X f x => f^(n+1) x] as
     output. In other words, do it [n] times, then do it once more. *)
 
-Definition scc (n : cnat) : cnat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition scc (n : cnat) : cnat :=
+   fun (X: Type) (f: X -> X) (x: X) => f (n X f x).
+
 
 Example scc_1 : scc zero = one.
-Proof. (* FILL IN HERE *) Admitted.
+Proof.  reflexivity. Qed.
 
 Example scc_2 : scc one = two.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example scc_3 : scc two = three.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 (** [] *)
 
@@ -1234,18 +1277,19 @@ Proof. (* FILL IN HERE *) Admitted.
     Hint: the "zero" argument to a Church numeral need not be just
     [x]. *)
 
-Definition plus (n m : cnat) : cnat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition plus (n m : cnat) : cnat :=
+  fun (X : Type) (f : X -> X) (x: X) => n X f (m X f x).
+
 
 Example plus_1 : plus zero one = one.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example plus_2 : plus two three = plus three two.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example plus_3 :
   plus (plus two two) three = plus one (plus three three).
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 (** [] *)
 
@@ -1263,17 +1307,18 @@ Proof. (* FILL IN HERE *) Admitted.
     which a type contains itself. So leave the type argument
     unchanged. *)
 
-Definition mult (n m : cnat) : cnat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition mult (n m : cnat) : cnat :=
+  fun (X: Type) (f: X -> X) (x : X) => n X (m X f) x.
+
 
 Example mult_1 : mult one one = one.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example mult_2 : mult zero (plus three three) = zero.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example mult_3 : mult two three = plus three three.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 (** [] *)
 
@@ -1288,17 +1333,19 @@ Proof. (* FILL IN HERE *) Admitted.
     But again, you cannot pass [cnat] itself as the type argument.
     Finding the right type can be tricky. *)
 
-Definition exp (n m : cnat) : cnat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition exp (n m : cnat) : cnat :=
+  fun (X : Type) (f: X -> X) (x: X) =>  (m (X -> X) (n X) f) x.
+
+Compute exp three two.
 
 Example exp_1 : exp two two = plus two two.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example exp_2 : exp three zero = one.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example exp_3 : exp three two = plus (mult two (mult two two)) one.
-Proof. (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 (** [] *)
 
