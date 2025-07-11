@@ -77,7 +77,9 @@ Theorem silly_ex : forall p,
   even p = true ->
   odd (S p) = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros p eq1 eq2 eq3.
+  apply eq2. apply eq1. apply eq3.
+  Qed.
 (** [] *)
 
 (** To use the [apply] tactic, the (conclusion of the) fact
@@ -112,7 +114,11 @@ Theorem rev_exercise1 : forall (l l' : list nat),
   l = rev l' ->
   l' = rev l.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  rewrite H.
+  symmetry.
+  apply rev_involutive.
+  Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, standard, optional (apply_rewrite)
@@ -121,9 +127,9 @@ Proof.
     [rewrite].  What are the situations where both can usefully be
     applied? *)
 
-(* FILL IN HERE
-
-    [] *)
+(* Apply proves the theorm (also might introduces new goal) while rewrite just rewrites in the different theorem.
+Apply is used when we find the theorm whose conclusions directly matches my goal but in turn will introduce goals from the theorem we are applying
+ *)
 
 (* ################################################################# *)
 (** * The [apply with] Tactic *)
