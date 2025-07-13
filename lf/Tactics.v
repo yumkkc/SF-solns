@@ -728,8 +728,24 @@ Theorem plus_n_n_injective : forall n m,
   n + n = m + m ->
   n = m.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros n. induction n as [| n' IHn'].
+  - intros m eq. simpl in eq.
+    destruct m as [| m'] eqn:E.
+    + reflexivity.
+    + discriminate eq.
+  - intros m eq.
+    destruct m as [| m'] eqn:E.
+    + discriminate eq.
+    + f_equal. apply IHn'.
+      simpl in eq.
+      rewrite <- plus_n_Sm in eq.
+      symmetry in eq.
+      rewrite <- plus_n_Sm in eq.
+      symmetry in eq.
+      apply S_injective in eq.
+      apply S_injective in eq.
+      apply eq.
+Qed.
 
 (** The strategy of doing fewer [intros] before an [induction] to
     obtain a more general IH doesn't always work; sometimes some
