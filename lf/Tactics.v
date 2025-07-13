@@ -291,8 +291,14 @@ Example injection_ex3 : forall (X : Type) (x y z : X) (l j : list X),
   j = z :: l ->
   x = y.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros X x y z l j H1 H2.
+  injection H1 as H11.
+  rewrite H11.
+  assert (H3: y :: l = z :: l).
+  {rewrite <- H2. apply H.}
+  - injection H3 as H31.
+    symmetry. apply H31.
+Qed.
 
 (** So much for injectivity of constructors.  What about disjointness? *)
 
@@ -341,8 +347,8 @@ Example discriminate_ex3 :
     x :: y :: l = [] ->
     x = z.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros X x y z l j H.
+  discriminate H. Qed.
 
 (** For a more useful example, we can use [discriminate] to make a
     connection between the two different notions of equality ([=] and
@@ -404,7 +410,7 @@ Proof. intros n m H. f_equal. apply H. Qed.
 
 (** By default, most tactics work on the goal formula and leave
     the context unchanged.  However, most tactics also have a variant
-    that performs a similar operation on a statement in the context.
+    that performs a similar operation on a statement in the context
 
     For example, the tactic "[simpl in H]" performs simplification on
     the hypothesis [H] in the context. *)
@@ -641,7 +647,7 @@ Proof.
     automatically by the [apply] in the next step), then [IHn'] gives
     us exactly what we need to finish the proof. *)
 
-      apply IHn'. simpl in eq. injection eq as goal. apply goal. Qed.
+      apply IHn'.  simpl in eq. injection eq as goal. apply goal. Qed.
 
 (** The thing to take away from all this is that you need to be
     careful, when using induction, that you are not trying to prove
@@ -655,8 +661,18 @@ Proof.
 Theorem eqb_true : forall n m,
   n =? m = true -> n = m.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros n. induction n as [| n' IHn'].
+  - destruct m as [| m'] eqn:E.
+    + reflexivity.
+    + intros eq1. discriminate eq1.
+  - destruct m as [| m'] eqn:E.
+    + intros eq1.
+      discriminate eq1.
+    + simpl. intros eq1.
+      f_equal. apply IHn'. (* this is backward reasoning: A -> B is true and to prove B, we can prove A as true *)
+      apply eq1.
+Qed.
+
 
 (** **** Exercise: 2 stars, advanced (eqb_true_informal)
 
@@ -664,7 +680,41 @@ Proof.
     hypothesis explicitly and being as explicit as possible about
     quantifiers, everywhere. *)
 
-(* FILL IN HERE *)
+(*
+  Theorem: For all n,m belonging to Nat, if (n =? m) = true,
+           then n = m
+
+Let n belongs to nat.
+
+[base case] take n = 0, such that,
+forall m, (0 =? m) = true -> n = m.
+
+m can either be 0 or 0 + a where a is some natural number.
+
+when m = 0, then (0 =? 0) = true is true, hence proposition is true.
+when m != 0, then (0 =? 0+a) = true is false, hence F -> T/F. The proposition is true
+
+now, take n = n' + 1 such that
+[inductive case] forall m (n' =? m) = true -> n' = m
+Show that forall m (n'+1 =? m) = true -> n'+1 = m
+
+[case m = 0] take m = 0 such that
+
+(n' + 1 =? 0) = true is false, hence the proposition is true that [(n' + 1 =? 0) = true -> n' + 1 = 0]
+
+[case m != 0] take m = 1 + m' for some natural number m'
+
+Then (n' + 1 =? m' + 1) = true -> (n' + 1) = (m' + 1)
+
+By definition of =?,
+(n' + 1 =? m' + 1) = true
+
+By the inductive hypothesis: (n' =? m') = true → n' = m'
+Therefore, n' = m'
+Therefore, (n' + 1) = (m' + 1)
+
+QED
+*)
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_informal_proof : option (nat*string) := None.
