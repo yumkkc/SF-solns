@@ -741,10 +741,9 @@ Proof.
       rewrite <- plus_n_Sm in eq.
       symmetry in eq.
       rewrite <- plus_n_Sm in eq.
-      symmetry in eq.
-      apply S_injective in eq.
-      apply S_injective in eq.
-      apply eq.
+      injection eq as goal.
+      symmetry in goal.
+      apply goal.
 Qed.
 
 (** The strategy of doing fewer [intros] before an [induction] to
@@ -851,8 +850,19 @@ Theorem nth_error_after_last: forall (n : nat) (X : Type) (l : list X),
   length l = n ->
   nth_error l n = None.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros n X l H.
+  generalize dependent n.
+  induction l as [| m' l'].
+  - simpl. destruct n as [| n'] eqn:E.
+    + reflexivity.
+    + discriminate.
+  (* m'::l' *)
+  - destruct n as [| n'] eqn:E.
+    + discriminate.
+    + simpl. intros.
+      injection H as goal.
+      apply IHl'. apply goal.
+      Qed.
 
 (* ################################################################# *)
 (** * Unfolding Definitions *)
@@ -1039,8 +1049,21 @@ Theorem combine_split : forall X Y (l : list (X * Y)) l1 l2,
   split l = (l1, l2) ->
   combine l1 l2 = l.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros X Y l.
+  induction l as [| m' l'].
+  - simpl. intros. injection H as H1 H2.
+    rewrite <- H1. rewrite <- H2.
+    simpl. reflexivity.
+  - intros l1 l2. unfold combine.
+
+
+
+
+
+
+  
+
+
 
 (** The [eqn:] part of the [destruct] tactic is optional; although
     we've chosen to include it most of the time, for the sake of
