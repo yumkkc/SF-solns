@@ -1054,15 +1054,14 @@ Proof.
   - simpl. intros. injection H as H1 H2.
     rewrite <- H1. rewrite <- H2.
     simpl. reflexivity.
-  - intros l1 l2. unfold combine.
-
-
-
-
-
-
-  
-
+  - intros l1 l2.
+    simpl. destruct m' as [m1 m2].
+    destruct (split l') as [l'1 l'2].
+    intros H1.
+    injection H1 as H11 H12.
+    rewrite <- H11. rewrite <- H12.
+    simpl. f_equal. apply IHl'. reflexivity.
+    Qed.
 
 
 (** The [eqn:] part of the [destruct] tactic is optional; although
@@ -1137,8 +1136,20 @@ Theorem bool_fn_applied_thrice :
   forall (f : bool -> bool) (b : bool),
   f (f (f b)) = f b.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros f b.
+  destruct b eqn:Hb.
+  (* b = true *)
+  - destruct (f true) eqn:Hft.
+    + rewrite Hft. apply Hft.
+    + destruct (f false) eqn:Hff.
+      ++ apply Hft.
+      ++ apply Hff.
+  - destruct (f false) eqn: Hff.
+    + destruct (f true) eqn:Hft.
+      ++ apply Hft.
+      ++ apply Hff.
+    + rewrite Hff. apply Hff.
+Qed.
 
 (* ################################################################# *)
 (** * Review *)
@@ -1218,8 +1229,16 @@ Proof.
 Theorem eqb_sym : forall (n m : nat),
   (n =? m) = (m =? n).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros n.
+  induction n as [| n'].
+  - destruct m.
+    + simpl. reflexivity.
+    + simpl. reflexivity.
+  - destruct m as [| m'] eqn:E.
+    + reflexivity.
+    + simpl. apply IHn'.
+Qed.
+
 
 (** **** Exercise: 3 stars, advanced, optional (eqb_sym_informal)
 
@@ -1239,8 +1258,20 @@ Theorem eqb_trans : forall n m p,
   m =? p = true ->
   n =? p = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros n.
+  induction n as [| n' IHn'].
+  - destruct m as [| m'] eqn:E.
+    + intros p eq1 eq2.
+      apply eq2.
+    + intros p eq1 eq2.
+      discriminate eq1.
+  - destruct m as [| m'] eqn:E.
+    + intros p eq1. discriminate eq1.
+    + intros p eq1 eq2.
+      apply S_inj in eq1.
+      apply IHn' in eq1 as eq3.
+
+
 
 (** **** Exercise: 3 stars, advanced (split_combine)
 
