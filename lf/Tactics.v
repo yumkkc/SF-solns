@@ -447,6 +447,15 @@ Proof.
   symmetry in H. apply EQ in H. symmetry in H.
   apply H.  Qed.
 
+Theorem silly : forall (n m p q : nat),
+  (n = m -> p = q) ->
+  m = n ->
+  q = p.
+Proof.
+  intros n m p q EQ H.
+  symmetry in H. apply EQ in H. symmetry in H.
+  apply H.  Qed.
+
 (** Forward reasoning starts from what is _given_ (premises,
     previously proven theorems) and iteratively draws conclusions from
     them until the goal is reached.  Backward reasoning starts from
@@ -1260,18 +1269,16 @@ Theorem eqb_trans : forall n m p,
 Proof.
   intros n.
   induction n as [| n' IHn'].
-  - destruct m as [| m'] eqn:E.
-    + intros p eq1 eq2.
-      apply eq2.
-    + intros p eq1 eq2.
-      discriminate eq1.
-  - destruct m as [| m'] eqn:E.
-    + intros p eq1. discriminate eq1.
-    + intros p eq1 eq2.
-      apply S_inj in eq1.
-      apply IHn' in eq1 as eq3.
-
-
+  - intros m p eq1 eq2.
+    apply eqb_true in eq1 as eq11.
+    apply eqb_true in eq2 as eq12.
+    rewrite eq11. apply eq2.
+  - intros m p eq1 eq2.
+    apply eqb_true in eq1 as eq11.
+    apply eqb_true in eq2 as eq12.
+    rewrite eq11.
+    apply eq2.
+Qed.
 
 (** **** Exercise: 3 stars, advanced (split_combine)
 
@@ -1284,10 +1291,12 @@ Proof.
     Your property will need to account for the behavior of [combine]
     in its base cases, which possibly drop some list elements. *)
 
-Definition split_combine_statement : Prop
-  (* ("[: Prop]" means that we are giving a name to a
+(* ("[: Prop]" means that we are giving a name to a
      logical proposition here.) *)
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+
+Definition split_combine_statement : Prop :=
+  forall (X Y: Type)  (l : list(X*Y)) (l1: list X)  (l2: list Y),
+    combine l1 l2 = l -> split l = (l1, l2).
 
 Theorem split_combine : split_combine_statement.
 Proof.
