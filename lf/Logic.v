@@ -144,8 +144,13 @@ Qed.
 Example plus_is_O :
   forall n m : nat, n + m = 0 -> n = 0 /\ m = 0.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros n.
+  induction n as [| n' IHn'].
+  - intros m H. apply conj.
+    + reflexivity.
+    + simpl in H. apply H.
+  - discriminate.
+Qed.
 
 (** So much for proving conjunctive statements.  To go in the other
     direction -- i.e., to _use_ a conjunctive hypothesis to help prove
@@ -222,8 +227,9 @@ Proof.
 Lemma proj2 : forall P Q : Prop,
   P /\ Q -> Q.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros P Q H.
+  destruct H as [_ HQ].
+  apply HQ. Qed.
 
 (** Finally, we sometimes need to rearrange the order of conjunctions
     and/or the grouping of multi-way conjunctions. We can see this
@@ -248,8 +254,13 @@ Theorem and_assoc : forall P Q R : Prop,
   P /\ (Q /\ R) -> (P /\ Q) /\ R.
 Proof.
   intros P Q R [HP [HQ HR]].
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  apply conj.
+  + apply conj.
+    ++ apply HP.
+    ++ apply HQ.
+  + apply HR.
+Qed.
+
 
 (** Finally, the infix notation [/\] is actually just syntactic sugar for
     [and A B].  That is, [and] is a Coq operator that takes two
@@ -320,15 +331,25 @@ Qed.
 Lemma mult_is_O :
   forall n m, n * m = 0 -> n = 0 \/ m = 0.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros [| n'].
+  - intros m H.
+    left. reflexivity.
+  - intros m H.
+    right. destruct m as [| m'] eqn:H2.
+    + reflexivity.
+    + discriminate.
+Qed.
+
 
 (** **** Exercise: 1 star, standard (or_commut) *)
 Theorem or_commut : forall P Q : Prop,
   P \/ Q  -> Q \/ P.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros P Q [HP | HQ].
+  - right. apply HP.
+  - left. apply HQ.
+Qed.
+
 
 (* ================================================================= *)
 (** ** Falsehood and Negation
@@ -386,8 +407,11 @@ Proof.
 Theorem not_implies_our_not : forall (P:Prop),
   ~ P -> (forall (Q:Prop), P -> Q).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  unfold "~". (* can be removed *)
+  intros P H Q p.
+  apply H in p. destruct p.
+Qed.
+
 
 (** Inequality is a very common form of negated statement, so there is a
     special notation for it:
@@ -402,7 +426,7 @@ Proof.
       [~(0 = 1)] -- that is, [not (0 = 1)] -- which unfolds to
       [(0 = 1) -> False]. (We use [unfold not] explicitly here,
       to illustrate that point, but generally it can be omitted.) *)
-  unfold not.
+  unfold "~".
   (** To prove an inequality, we may assume the opposite
       equality... *)
   intros contra.
@@ -423,20 +447,20 @@ Qed.
 Theorem not_False :
   ~ False.
 Proof.
-  unfold not. intros H. destruct H. Qed.
+  unfold "~". intros H. destruct H. Qed.
 
 Theorem contradiction_implies_anything : forall P Q : Prop,
   (P /\ ~P) -> Q.
 Proof.
   (* WORKED IN CLASS *)
-  intros P Q [HP HNP]. unfold not in HNP.
+  intros P Q [HP HNP]. unfold "~" in HNP.
   apply HNP in HP. destruct HP.  Qed.
 
 Theorem double_neg : forall P : Prop,
   P -> ~~P.
 Proof.
   (* WORKED IN CLASS *)
-  intros P H. unfold not. intros G. apply G. apply H.  Qed.
+  intros P H. unfold "~". intros G. apply G. apply H.  Qed.
 
 (** **** Exercise: 2 stars, advanced (double_neg_informal)
 
@@ -444,7 +468,14 @@ Proof.
 
    _Theorem_: [P] implies [~~P], for any proposition [P]. *)
 
-(* FILL IN HERE *)
+(*
+  Theorem P -> ~ ~ P
+
+Assume P is True.
+
+Now, assume ~ P is True, means P is False. This is a contradiction.
+Hence, ~ [~ P] is True
+*)
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_double_neg_informal : option (nat*string) := None.
@@ -454,22 +485,35 @@ Definition manual_grade_for_double_neg_informal : option (nat*string) := None.
 Theorem contrapositive : forall (P Q : Prop),
   (P -> Q) -> (~Q -> ~P).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  unfold "~".
+  intros P Q PQ nQ p.
+  apply PQ in p. apply nQ in p.
+  destruct p.
+  Qed.
 
 (** **** Exercise: 1 star, standard (not_both_true_and_false) *)
 Theorem not_both_true_and_false : forall P : Prop,
   ~ (P /\ ~P).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros P.
+  unfold "~".
+  intros [H1 H2]. apply H2 in H1.
+  destruct H1. Qed.
 
 (** **** Exercise: 1 star, advanced (not_PNP_informal)
 
     Write an informal proof (in English) of the proposition [forall P
     : Prop, ~(P /\ ~P)]. *)
 
-(* FILL IN HERE *)
+(*
+Theorem: ~ (P and ~P)
+Assume P is true.
+Then ~P is false.
+Since ~P is false, (P ∧ ~P) is false. Therefore ~(P ∧ ~P) is true.
+
+ By similar reasoning, if P is false, ~(P ∧ ~P) is still true. Since this holds regardless of P's truth value, ~(P ∧ ~P) is a tautology.
+
+*)
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_not_PNP_informal : option (nat*string) := None.
@@ -486,17 +530,33 @@ Definition manual_grade_for_not_PNP_informal : option (nat*string) := None.
 Theorem de_morgan_not_or : forall (P Q : Prop),
     ~ (P \/ Q) -> ~P /\ ~Q.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  unfold "~".
+  intros P Q H.
+  apply conj.
+  - intros H1. apply H.
+    left. apply H1.
+  - intros H1. apply H.
+    right. apply H1.
+Qed.
+
+Theorem de_morgan_not_or2 : forall (P Q : Prop),
+    ~ (P \/ Q) -> ~P /\ ~Q.
+Proof.
+  intros P Q HPQ.
+  unfold "~" in HPQ.
+  split.
+  - intros HP. apply or_intro_l with (B:=Q) in HP. apply HPQ. apply HP.
+  - intros HP. apply or_intro_l with (B:=P) in HP. apply or_commut in HP. apply HPQ. apply HP.
+Qed.
 
 (** **** Exercise: 1 star, standard, optional (not_S_inverse_pred)
 
     Since we are working with natural numbers, we can disprove that
     [S] and [pred] are inverses of each other: *)
 Lemma not_S_pred_n : ~(forall n : nat, S (pred n) = n).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof
+  intros H. destruct H with (n:=0).
+
 
 (** Since inequality involves a negation, it also requires a little
     practice to be able to work with it fluently.  Here is one useful
