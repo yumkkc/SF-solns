@@ -1339,7 +1339,7 @@ Definition exp (n m : cnat) : cnat :=
 Compute exp three two.
 
 Example exp_1 : exp two two = plus two two.
-Proof. reflexivity. Qed.
+Proof. reflexivity. Qed. 
 
 Example exp_2 : exp three zero = one.
 Proof. reflexivity. Qed.

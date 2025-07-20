@@ -1295,12 +1295,15 @@ Qed.
      logical proposition here.) *)
 
 Definition split_combine_statement : Prop :=
-  forall (X Y: Type)  (l : list(X*Y)) (l1: list X)  (l2: list Y),
-    combine l1 l2 = l -> split l = (l1, l2).
+  forall (X Y: Type)  (l1: list X)  (l2: list Y),
+    Length l1 = Length l2 -> split (combine l1 l2) = (l1 l2)
 
 Theorem split_combine : split_combine_statement.
 Proof.
-(* FILL IN HERE *) Admitted.
+  unfold split_combine_statement.
+  intros X Y.
+  induction l in [| l]
+
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_split_combine : option (nat*string) := None.
