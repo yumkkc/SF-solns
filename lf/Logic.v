@@ -553,9 +553,16 @@ Qed.
 
     Since we are working with natural numbers, we can disprove that
     [S] and [pred] are inverses of each other: *)
+
+Definition not_S_pred_n_disc  (n: nat) : Prop :=
+  match n with
+  | 0 => True
+  |S _ => False
+  end.
+
 Lemma not_S_pred_n : ~(forall n : nat, S (pred n) = n).
-Proof
-  intros H. destruct H with (n:=0).
+Proof.
+  intros H. Admitted.
 
 
 (** Since inequality involves a negation, it also requires a little
@@ -575,7 +582,7 @@ Theorem not_true_is_false : forall b : bool,
 Proof.
   intros b H. destruct b eqn:HE.
   - (* b = true *)
-    unfold not in H.
+    unfold "~" in H.
     apply ex_falso_quodlibet.
     apply H. reflexivity.
   - (* b = false *)
@@ -590,7 +597,7 @@ Theorem not_true_is_false' : forall b : bool,
 Proof.
   intros [] H.          (* note implicit [destruct b] here *)
   - (* b = true *)
-    unfold not in H.
+    unfold "~" in  H.
     exfalso.                (* <=== *)
     apply H. reflexivity.
   - (* b = false *) reflexivity.
@@ -606,6 +613,7 @@ Qed.
 
 Lemma True_is_true : True.
 Proof. apply I. Qed.
+Check I.
 
 (** Unlike [False], which is used extensively, [True] is used
     relatively rarely, since it is trivial (and therefore
@@ -650,10 +658,18 @@ Qed.
 (** Use the same technique as above to show that [nil <> x :: xs].
     Do not use the [discriminate] tactic. *)
 
+Definition list_fn (X: Type) (l: list X) : Prop :=
+  match l with
+  | [] => True
+  | _::_ => False
+  end.
+
 Theorem nil_is_not_cons : forall X (x : X) (xs : list X), ~ (nil = x :: xs).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  unfold "~".  intros.
+  assert (H1: list_fn X []). {simpl. apply I.}
+  rewrite H in H1. simpl in H1. apply H1.
+Qed.
 
 (* ================================================================= *)
 (** ** Logical Equivalence *)
@@ -666,7 +682,7 @@ Module IffPlayground.
 
 Definition iff (P Q : Prop) := (P -> Q) /\ (Q -> P).
 
-Notation "P <-> Q" := (iff P Q)
+Notation "P <--> Q" := (iff P Q)
                       (at level 95, no associativity)
                       : type_scope.
 
@@ -715,20 +731,41 @@ Qed.
 Theorem iff_refl : forall P : Prop,
   P <-> P.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros P.
+  split.
+  - intros P1. apply P1.
+  - intros P1. apply P1.
+Qed.
 
 Theorem iff_trans : forall P Q R : Prop,
   (P <-> Q) -> (Q <-> R) -> (P <-> R).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros P Q R PQ QR.
+  apply conj.
+  - intros H. apply PQ in H. apply QR in H.
+    apply H.
+  - intros H. apply QR in H. apply PQ in H. apply H.
+Qed.
 
 (** **** Exercise: 3 stars, standard (or_distributes_over_and) *)
 Theorem or_distributes_over_and : forall P Q R : Prop,
   P \/ (Q /\ R) <-> (P \/ Q) /\ (P \/ R).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros P Q R.
+  split.
+  - intros H. destruct H.
+    + apply conj.
+      ++ left. apply H.
+      ++ left. apply H.
+    + apply conj.
+      ++ right. apply H.
+      ++ right. apply H.
+  - intros [[HP1| HQ] [HP2 | HR]].
+    + left. apply HP1.
+    + left. apply HP1.
+    + left. apply HP2.
+    + right. split. apply HQ. apply HR.
+Qed.
 
 (* ================================================================= *)
 (** ** Setoids and Logical Equivalence *)
@@ -826,7 +863,7 @@ Proof.
   (* WORKED IN CLASS *)
   intros n [m Hm]. (* note the implicit [destruct] here *)
   exists (2 + m).
-  apply Hm.  Qed.
+  simpl. apply Hm. Qed.
 
 (** **** Exercise: 1 star, standard, especially useful (dist_not_exists)
 
@@ -837,8 +874,10 @@ Proof.
 Theorem dist_not_exists : forall (X:Type) (P : X -> Prop),
   (forall x, P x) -> ~ (exists x, ~ P x).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros X P H1 [x Hp].
+  unfold "~" in Hp.
+  apply Hp. apply H1.
+Qed.
 
 (** **** Exercise: 2 stars, standard (dist_exists_or)
 
@@ -848,19 +887,51 @@ Proof.
 Theorem dist_exists_or : forall (X:Type) (P Q : X -> Prop),
   (exists x, P x \/ Q x) <-> (exists x, P x) \/ (exists x, Q x).
 Proof.
-   (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros X P Q.
+  split.
+  - intros [x Hpq].
+    destruct Hpq.
+    + left. exists x. apply H.
+    + right. exists x. apply H.
+  - intros [[p Hp] | [q Hq]].
+    + exists p. left. apply Hp.
+    + exists q. right. apply Hq.
+Qed.
+
 
 (** **** Exercise: 3 stars, standard, optional (leb_plus_exists) *)
 Theorem leb_plus_exists : forall n m, n <=? m = true -> exists x, m = n+x.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intro n.
+  induction n as [| n' IHn'].
+  - intros m H. exists m. simpl. reflexivity.
+  - intros m H.
+    destruct m eqn:Hm.
+    + discriminate.
+    + simpl in H.
+      apply IHn' in H.
+      destruct H.
+      exists x. rewrite H. reflexivity.
+Qed.
 
 Theorem plus_exists_leb : forall n m, (exists x, m = n+x) -> n <=? m = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  induction n as [| n' IHn'].
+  - destruct m eqn:Hm.
+    + reflexivity.
+    + intros [x H]. simpl in H.
+      reflexivity.
+  - intros m [x H].
+    destruct m as [| m'] eqn:Hm.
+    + discriminate.
+    + simpl.
+      (*apply induction*)
+      apply IHn'.
+      exists x.
+      (* injection can be used here. very nice *)
+      injection H as goal. apply goal.
+Qed.
 
-(** [] *)
 
 (* ################################################################# *)
 (** * Programming with Propositions *)
