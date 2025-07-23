@@ -972,6 +972,7 @@ Example In_example_2 :
   exists n', n = 2 * n'.
 Proof.
   (* WORKED IN CLASS *)
+  (* [n = 2 \/ n = 4 \/ False -> exists n' : nat, n = 2 * n'] *)
   simpl.
   intros n [H | [H | []]].
   - exists 1. rewrite <- H. reflexivity.
@@ -1015,18 +1016,46 @@ Theorem In_map_iff :
          In y (map f l) <->
          exists x, f x = y /\ In x l.
 Proof.
-  intros A B f l y. split.
-  - induction l as [|x l' IHl'].
-    (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros A B f.
+  induction l as [| m' l'].
+  - split. simpl. intros. destruct H.
+    intros [x H]. simpl in H. destruct H as [H []].
+  - split.
+    + simpl . intros [H1| H2].
+      ++ exists m'. apply conj. apply H1.
+         left. reflexivity.
+      ++ apply IHl' in H2. destruct H2.
+         destruct H. exists x.
+         split. apply H. right. apply H0.
+    + simpl. intros [x [H1 H2]].
+      destruct H2.
+      ++ left. rewrite H. apply H1.
+      ++ right. apply IHl'. exists x. split.
+         apply H1. apply H.
+Qed.
+
 
 (** **** Exercise: 2 stars, standard (In_app_iff) *)
 Theorem In_app_iff : forall A l l' (a:A),
   In a (l++l') <-> In a l \/ In a l'.
 Proof.
   intros A l. induction l as [|a' l' IH].
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  - intros l' a.
+    simpl. split.
+    intros. right. apply H.
+    intros [H1 |  H2]. destruct H1. apply H2.
+  - intros l a.
+    simpl. split.
+    + intros [H1 | H2].
+      ++ left. left. apply H1.
+      ++ apply IH in H2. destruct H2.
+         left. right. apply H. right. apply H.
+    + intros [H1 | H2].
+      ++ destruct H1. left. apply H.
+         right. apply IH. left. apply H.
+      ++ right. apply IH. right. apply H2.
+Qed.
+
 
 (** **** Exercise: 3 stars, standard, especially useful (All)
 
@@ -1040,16 +1069,57 @@ Proof.
     lemma below.  (Of course, your definition should _not_ just
     restate the left-hand side of [All_In].) *)
 
-Fixpoint All {T : Type} (P : T -> Prop) (l : list T) : Prop
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Fixpoint All {T : Type} (P : T -> Prop) (l : list T) : Prop :=
+  match l with
+  | [] => True
+  | x :: xs => P x /\ All P xs
+  end.
+  
+
+Theorem All_In2 :
+  forall T (P : T -> Prop) (l : list T),
+    (forall x, In x l -> P x) <->
+    All P l.
+Proof.
+  intros T P. induction l as [| m l' IH].
+  - split.
+    + intros H. reflexivity.
+    + intros H x y. destruct y.
+  - simpl. split.
+    + intros H.
+      apply conj.
+      ++ apply H. left. reflexivity.
+      ++ apply IH. intros x H2.
+         apply H. right. apply H2.
+    + intros [Pm Pl] x [Hm | Hl].
+      rewrite <- Hm. apply Pm. apply IH.
+      ++ apply Pl.
+      ++ apply Hl.
+Qed.
+
+(* better way I think to split and induction: leads to natural induction *)
 
 Theorem All_In :
   forall T (P : T -> Prop) (l : list T),
     (forall x, In x l -> P x) <->
     All P l.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros T P.
+  split.
+    - induction l as [| m l' IH].
+    + intros H. reflexivity.
+    + simpl. intros H.
+      split.
+      ++ apply H. left. reflexivity.
+      ++ apply IH. intros. apply H. right. apply H0.
+    - induction l as [| m l' IH].
+      + simpl. intros. destruct H0.
+      + simpl. intros [H1 H2] x [H3 | H4].
+         ++ rewrite <- H3. apply H1.
+         ++ apply IH.
+             apply H2. apply H4.
+Qed.
+
 
 (** **** Exercise: 2 stars, standard, optional (combine_odd_even)
 
@@ -1104,6 +1174,7 @@ Proof.
     an expression has a given type: *)
 
 Check plus : nat -> nat -> nat.
+Check rev.
 Check @rev : forall X, list X -> list X.
 
 (** We can also use it to check the theorem a particular identifier
@@ -1121,8 +1192,8 @@ Check plus_id_example : forall n m : nat, n = m -> n + n = m + m.
 
 (** The reason is that the identifier [add_comm] actually refers to a
     _proof object_ -- a logical derivation establishing the truth of the
-    statement [forall n m : nat, n + m = m + n].  The type of this object
-    is the proposition that it is a proof of.
+    statement [forall n m : nat, n + m = m + n].  ** The type of this object
+    is the proposition that it is a proof of. **
 
     The type of an ordinary function tells us what we can do with it.
        - If we have a term of type [nat -> nat -> nat], we can give it two
@@ -1204,7 +1275,7 @@ Qed.
 Theorem in_not_nil :
   forall A (x : A) (l : list A), In x l -> l <> [].
 Proof.
-  intros A x l H. unfold not. intro Hl.
+  intros A x l H. unfold "~". intro Hl.
   rewrite Hl in H.
   simpl in H.
   apply H.
@@ -1253,6 +1324,7 @@ Proof.
   apply H.
 Qed.
 
+Check in_not_nil.
 (** Explicitly apply the lemma to a hypothesis (causing the values of the
     other parameters to be inferred). *)
 Lemma in_not_nil_42_take5 :
@@ -1339,6 +1411,7 @@ Example even_42_bool : even 42 = true.
 Proof. reflexivity. Qed.
 
 (** ... or that there exists some [k] such that [n = double k]. *)
+
 Example even_42_prop : Even 42.
 Proof. unfold Even. exists 21. reflexivity. Qed.
 
@@ -1358,9 +1431,12 @@ Qed.
 Lemma even_double_conv : forall n, exists k,
   n = if even n then double k else S (double k).
 Proof.
-  (* Hint: Use the [even_S] lemma from [Induction.v]. *)
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  induction n as [| n' IH].
+  - simpl. exists 0. simpl. reflexivity.
+  - destruct (even (S n')) eqn:H.
+    +
+
+(* even_S: forall n : nat, even (S n) = negb (even n) *)
 
 (** Now the main theorem: *)
 Theorem even_bool_prop : forall n,
