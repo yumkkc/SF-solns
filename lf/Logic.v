@@ -1128,8 +1128,8 @@ Qed.
     return a property [P] such that [P n] is equivalent to [Podd n] when
     [n] is [odd] and equivalent to [Peven n] otherwise. *)
 
-Definition combine_odd_even (Podd Peven : nat -> Prop) : nat -> Prop
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition combine_odd_even (Podd Peven : nat -> Prop) : nat -> Prop :=
+  fun (n:nat) => if (odd n) then Podd n else Peven n.
 
 (** To test your definition, prove the following facts: *)
 
@@ -1139,7 +1139,15 @@ Theorem combine_odd_even_intro :
     (odd n = false -> Peven n) ->
     combine_odd_even Podd Peven n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros Podd Peven. unfold combine_odd_even.
+  induction n as [| n' IHn'].
+  - intros H1 H2. simpl.
+    apply H2. reflexivity.
+  - intros H1 H2.
+    destruct (odd (S n')) eqn: Hodd.
+    + apply H1. reflexivity.
+    + apply H2. reflexivity.
+Qed.
 
 Theorem combine_odd_even_elim_odd :
   forall (Podd Peven : nat -> Prop) (n : nat),
@@ -1147,7 +1155,14 @@ Theorem combine_odd_even_elim_odd :
     odd n = true ->
     Podd n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros Podd Peven.
+  unfold combine_odd_even.
+  destruct n as [| n' IN].
+  - intros H1 H2. simpl in H1.
+    discriminate.
+  - intros H1 H2. rewrite H2 in H1.
+  apply H1.
+Qed.
 
 Theorem combine_odd_even_elim_even :
   forall (Podd Peven : nat -> Prop) (n : nat),
@@ -1155,8 +1170,14 @@ Theorem combine_odd_even_elim_even :
     odd n = false ->
     Peven n.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  unfold combine_odd_even.
+  intros Podd Peven.
+  destruct n as [| n'].
+  - intros H1 H2.
+    simpl in H1. apply H1.
+  - intros H1 H2.
+    rewrite H2 in H1. apply H1.
+Qed.
 
 (* ################################################################# *)
 (** * Applying Theorems to Arguments *)
@@ -1431,12 +1452,14 @@ Qed.
 Lemma even_double_conv : forall n, exists k,
   n = if even n then double k else S (double k).
 Proof.
-  induction n as [| n' IH].
-  - simpl. exists 0. simpl. reflexivity.
-  - destruct (even (S n')) eqn:H.
-    +
+  induction n as [| n' IHn'].
+  - simpl. exists 0. reflexivity.
+  - rewrite even_S.
+    destruct (even n') eqn:H.
+    + simpl. destruct IHn'. exists x. f_equal. apply H0.
+    + simpl. destruct IHn'. exists (S x). simpl. f_equal. apply H0.
+Qed.
 
-(* even_S: forall n : nat, even (S n) = negb (even n) *)
 
 (** Now the main theorem: *)
 Theorem even_bool_prop : forall n,
@@ -1444,7 +1467,7 @@ Theorem even_bool_prop : forall n,
 Proof.
   intros n. split.
   - intros H. destruct (even_double_conv n) as [k Hk].
-    rewrite Hk. rewrite H. exists k. reflexivity.
+    rewrite Hk. rewrite H. unfold Even. exists k. reflexivity.
   - intros [k Hk]. rewrite Hk. apply even_double.
 Qed.
 
@@ -1568,7 +1591,7 @@ Example not_even_1001' : ~(Even 1001).
 Proof.
   (* WORKED IN CLASS *)
   rewrite <- even_bool_prop.
-  unfold not.
+  unfold "<>".
   simpl.
   intro H.
   discriminate H.
@@ -1582,16 +1605,15 @@ Qed.
     convert the statement to the equivalent form [n = m], we can rewrite
     with it. *)
 
-Lemma plus_eqb_example : forall n m p : nat,
+
+Lemma plus_eqb_example2 : forall n m p : nat,
   n =? m = true -> n + p =? m + p = true.
 Proof.
-  (* WORKED IN CLASS *)
   intros n m p H.
   rewrite eqb_eq in H.
-  rewrite H.
-  rewrite eqb_eq.
-  reflexivity.
+  rewrite H. rewrite eqb_eq. reflexivity.
 Qed.
+
 
 (** We won't discuss reflection any further for the moment, but
     it serves as a good example showing the different strengths of
@@ -1608,13 +1630,36 @@ Qed.
 Theorem andb_true_iff : forall b1 b2:bool,
   b1 && b2 = true <-> b1 = true /\ b2 = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros b1 b2. split.
+  - intros H. apply andb_true_elim2 in H as H2.
+  rewrite andb_commutative in H. apply andb_true_elim2 in H.
+  split. apply H. apply H2.
+  - intros [H1 H2].
+    rewrite H1. rewrite H2. reflexivity.
+Qed.
+
+Theorem orb_commutative : forall (a b : bool),
+    a || b = b || a.
+Proof. intros a b. destruct a.
+       - simpl. destruct b.
+         + simpl. reflexivity.
+         + simpl. reflexivity.
+       - destruct b.
+         + simpl. reflexivity.
+         +simpl. reflexivity.
+Qed.
 
 Theorem orb_true_iff : forall b1 b2,
   b1 || b2 = true <-> b1 = true \/ b2 = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros b1 b2. split.
+  - intros H1. destruct b1.
+    + left. reflexivity.
+    + simpl in H1. right. apply H1.
+  - intros [H1 | H2].
+    + rewrite H1. reflexivity.
+    + rewrite H2. rewrite orb_commutative. simpl. reflexivity.
+Qed.
 
 (** **** Exercise: 1 star, standard (eqb_neq)
 
@@ -1622,11 +1667,42 @@ Proof.
     [eqb_eq] that is more convenient in certain situations.  (We'll see
     examples in later chapters.)  Hint: [not_true_iff_false]. *)
 
+Check not_true_iff_false.
 Theorem eqb_neq : forall x y : nat,
   x =? y = false <-> x <> y.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+   induction x as [| x' IHx'].
+    + destruct y as [| y'] eqn:IHy.
+       ++ simpl. split. discriminate.
+          intros. unfold "<>" in H. exfalso. apply H. reflexivity.
+       ++ split.
+          +++ unfold "<>". intros. discriminate.
+          +++ unfold "<>". intros. simpl. reflexivity.
+    + destruct y as [| y'] eqn:IHy.
+      ++ unfold "<>". split.
+         +++ intros. discriminate.
+         +++ intros. simpl. reflexivity.
+      ++ unfold "<>". split.
+         +++ intros. injection H0 as goal.
+             simpl in H. apply IHx' in H. rewrite goal in H. simpl in H.
+             unfold "<>" in H. apply H. reflexivity.
+         +++ intros. simpl. apply IHx'. unfold "<>". intros.
+             apply H. f_equal. apply H0.
+Qed.
+
+Theorem eqb_neq2 : forall x y : nat,
+  x =? y = false <-> x <> y.
+Proof.
+    split.
+    + intros H.
+      destruct (x =? y) eqn:H2.
+      ++ discriminate.
+      ++ unfold "<>". intros contra.
+         rewrite <- eqb_eq in contra. rewrite H2 in contra. discriminate.
+    + intros. unfold "<>" in H. destruct (x =? y) eqn:Hxy.
+      ++ rewrite <- eqb_eq in H. apply H in Hxy. destruct Hxy.
+      ++ reflexivity.
+Qed.
 
 (** **** Exercise: 3 stars, standard (eqb_list)
 
@@ -1636,18 +1712,24 @@ Proof.
     of the [eqb_list] function below.  To make sure that your
     definition is correct, prove the lemma [eqb_list_true_iff]. *)
 
+
 Fixpoint eqb_list {A : Type} (eqb : A -> A -> bool)
-                  (l1 l2 : list A) : bool
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+                  (l1 l2 : list A) : bool :=
+  match l1, l2 with
+  | [] , [] => true
+  | [], _ => false
+  | _, [] => false
+  | x::xs, y::ys => (eqb x y) && (eqb_list eqb xs ys)
+  end.
+
 
 Theorem eqb_list_true_iff :
   forall A (eqb : A -> A -> bool),
     (forall a1 a2, eqb a1 a2 = true <-> a1 = a2) ->
     forall l1 l2, eqb_list eqb l1 l2 = true <-> l1 = l2.
 Proof.
-(* FILL IN HERE *) Admitted.
+  Admitted.
 
-(** [] *)
 
 (** **** Exercise: 2 stars, standard, especially useful (All_forallb)
 
@@ -1944,8 +2026,12 @@ Qed.
 Theorem excluded_middle_irrefutable: forall (P : Prop),
   ~ ~ (P \/ ~ P).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  Admitted.
+
+Search (~ _).
+(*de_morgan_not_or*)
+
+
 
 (** **** Exercise: 3 stars, advanced (not_exists_dist)
 
