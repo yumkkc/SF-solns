@@ -667,8 +667,9 @@ Definition list_fn (X: Type) (l: list X) : Prop :=
 Theorem nil_is_not_cons : forall X (x : X) (xs : list X), ~ (nil = x :: xs).
 Proof.
   unfold "~".  intros.
-  assert (H1: list_fn X []). {simpl. apply I.}
-  rewrite H in H1. simpl in H1. apply H1.
+  assert (H1: list_fn X []).
+  - simpl. apply I.
+  - rewrite H in H1. simpl in H1. apply H1.
 Qed.
 
 (* ================================================================= *)
