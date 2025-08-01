@@ -698,8 +698,11 @@ Theorem le_inversion : forall (n m : nat),
   le n m ->
   (n = m) \/ (exists m', m = S m' /\ le n m').
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros n m E. destruct E as [ | m' E' ] eqn:EE.
+  - left. reflexivity.
+  - right. exists m'. split. reflexivity. apply E'.
+Qed.
+
 
 (** We can use the inversion lemma that we proved above to help
     structure proofs: *)
@@ -743,7 +746,7 @@ Qed.
 
 Theorem one_not_even : ~ ev 1.
 Proof.
-  intros H. apply ev_inversion in H.  destruct H as [ | [m [Hm _]]].
+  intros H. apply ev_inversion in H. destruct H as [ | [m [Hm Hm2]]].
   - discriminate H.
   - discriminate Hm.
 Qed.
@@ -759,8 +762,26 @@ Proof. intros H. inversion H. Qed.
 Theorem SSSSev__even : forall n,
   ev (S (S (S (S n)))) -> ev n.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros n E. inversion E as [ | n' E' Hnn' ].
+  (* E = ev_SS n' E' *)
+  inversion E'. apply H0.
+Qed.
+
+Theorem SSSeveven2 : forall n,
+    ev (S (S (S (S n)))) -> ev n.
+Proof.
+  intros n E. apply ev_inversion in E.
+  destruct E as [ | [m [Hmm Hmev]] ].
+  - discriminate H.
+  - injection Hmm as Hmm.
+    rewrite <- Hmm in Hmev.
+    apply ev_inversion in Hmev.
+    destruct Hmev.
+    + discriminate H.
+    + destruct H. destruct H.
+      injection  H as H.
+      rewrite H. apply H0.
+Qed.
 
 (** **** Exercise: 1 star, standard (ev5_nonsense)
 
@@ -769,8 +790,10 @@ Proof.
 Theorem ev5_nonsense :
   ev 5 -> 2 + 2 = 9.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros. simpl.
+  inversion H as [ | n' E Hnn' ].
+  inversion E. inversion H1.
+Qed.
 
 (** The [inversion] tactic does quite a bit of work. For
     example, when applied to an equality assumption, it does the work
@@ -895,7 +918,7 @@ Abort.
 Lemma ev_Even : forall n,
   ev n -> Even n.
 Proof.
-  unfold Even. intros n E.
+  intros n E.
   induction E as [|n' E' IH].
   - (* E = ev_0 *)
     exists 0. reflexivity.
@@ -920,6 +943,7 @@ Proof.
   - (* <- *) unfold Even. intros [k Hk]. rewrite Hk. apply ev_double.
 Qed.
 
+
 (** As we will see in later chapters, induction on evidence is a
     recurring technique across many areas -- in particular for
     formalizing the semantics of programming languages. *)
@@ -930,8 +954,13 @@ Qed.
 (** **** Exercise: 2 stars, standard (ev_sum) *)
 Theorem ev_sum : forall n m, ev n -> ev m -> ev (n + m).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros n m E.
+  induction E as [| m' E' IH].
+  - simpl. intros. apply H.
+  - simpl. intros. apply IH in H.
+    apply ev_SS. apply H.
+Qed.
+
 
 (** **** Exercise: 3 stars, advanced, especially useful (ev_ev__ev) *)
 Theorem ev_ev__ev : forall n m,
@@ -939,8 +968,8 @@ Theorem ev_ev__ev : forall n m,
   (* Hint: There are two pieces of evidence you could attempt to induct upon
       here. If one doesn't work, try the other. *)
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+
+
 
 (** **** Exercise: 3 stars, standard, optional (ev_plus_plus)
 
