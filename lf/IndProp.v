@@ -362,15 +362,16 @@ cms 16 8           cms 8 4           cms 4 2           cms 2 1
     How would you modify the [clos_refl_trans] definition above so as
     to define the reflexive, symmetric, and transitive closure? *)
 
-Inductive clos_refl_trans_sym {X : Type} {R : X -> X -> Prop} : X -> X -> Prop :=
+Inductive clos_refl_trans_sym {X : Type} (R : X -> X -> Prop) : X -> X -> Prop :=
 | r_step (x y : X) : R x y ->
                      clos_refl_trans_sym R x y
 | r_refl (x : X) :  clos_refl_trans_sym R x x
 | r_sym (x y : X) : R x y ->
                     clos_refl_trans_sym R y x
-| r_trans (x y z : X) : clos_refl_trans_sym x y ->
-                        clos_refl_trans_sym y z ->
-                        clos_refl_trans_sym x z.
+
+| r_trans (x y z : X) : clos_refl_trans_sym R x y ->
+                        clos_refl_trans_sym R y z ->
+                        clos_refl_trans_sym R x z.
 
 (* ================================================================= *)
 (** ** Example: Permutations *)
@@ -423,9 +424,12 @@ Inductive Perm3 {X : Type} : list X -> list X -> Prop :=
     According to this definition, is [[1;2;3]] a permutation of
     itself? *)
 
-(* FILL IN HERE
-
-    [] *)
+Theorem perm_itself_ott : Perm3 [1;2;3] [1;2;3].
+  Proof.
+    apply perm3_trans with [2;1;3].
+    - apply perm3_swap12.
+    - apply perm3_swap12.
+  Qed.
 
 (* ================================================================= *)
 (** ** Example: Evenness (yet again) *)
@@ -572,8 +576,11 @@ Qed.
 Theorem ev_double : forall n,
   ev (double n).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  induction n as [| n IHn'].
+  - simpl. apply ev_0.
+  - rewrite double_incr. apply ev_SS. apply IHn'.
+Qed.
+
 
 (* ================================================================= *)
 (** ** Constructing Evidence for Permutations *)
@@ -612,13 +619,19 @@ Qed.
 (** **** Exercise: 1 star, standard (Perm3) *)
 Lemma Perm3_ex1 : Perm3 [1;2;3] [2;3;1].
 Proof.
-  (* FILL IN HERE *) Admitted.
+  apply perm3_trans with [2;1;3].
+  - apply perm3_swap12.
+  - apply perm3_swap23.
+Qed.
 
 Lemma Perm3_refl : forall (X : Type) (a b c : X),
   Perm3 [a;b;c] [a;b;c].
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros.
+  apply perm3_trans with [b;a;c].
+  - apply perm3_swap12.
+  - apply perm3_swap12.
+Qed.
 
 (* ################################################################# *)
 (** * Using Evidence in Proofs *)
