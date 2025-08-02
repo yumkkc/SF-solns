@@ -982,10 +982,20 @@ Proof.
     But, you will need a clever assertion and some tedious rewriting.
     Hint: Is [(n+m) + (n+p)] even? *)
 
+Set Printing Parentheses.
 Theorem ev_plus_plus : forall n m p,
   ev (n+m) -> ev (n+p) -> ev (m+p).
 Proof.
-
+  intros n m p Hnm Hnp.
+  apply (ev_ev__ev (n+n) (m+p)).
+  - assert (H: ev ((n+m) + (n + p))).
+    {apply ev_sum. apply Hnm. apply Hnp.}
+    rewrite add_assoc in H.
+    rewrite (add_comm (n+m) n) in H.
+    rewrite add_assoc in H.
+    rewrite <- (add_assoc (n+n) m) in H.
+    apply H.
+  - rewrite <- double_plus. apply ev_double.
 Qed.
 
 (** **** Exercise: 4 stars, advanced, optional (ev'_ev)
@@ -999,6 +1009,8 @@ Inductive ev' : nat -> Prop :=
   | ev'_2 : ev' 2
   | ev'_sum n m (Hn : ev' n) (Hm : ev' m) : ev' (n + m).
 
+Check ev'_sum.
+
 (** Prove that this definition is logically equivalent to the old one.
     To streamline the proof, use the technique (from the [Logic]
     chapter) of applying theorems to arguments, and note that the same
@@ -1007,7 +1019,19 @@ Inductive ev' : nat -> Prop :=
 
 Theorem ev'_ev : forall n, ev' n <-> ev n.
 Proof.
- (* FILL IN HERE *) Admitted.
+  intros n. split.
+  - intros H. induction H.
+    + apply ev_0.
+    + apply ev_SS. apply ev_0.
+    + apply ev_sum. apply IHev'1. apply IHev'2.
+  - intros H. induction H as [| n' E IH].
+    + apply ev'_0.
+    + assert (H : S (S n') = n' + 2).
+      {symmetry. rewrite add_comm. simpl. reflexivity.}
+      rewrite H. apply ev'_sum.
+      apply IH. apply ev'_2.
+Qed.
+
 (** [] *)
 
 (** We can do similar inductive proofs on the [Perm3] relation,
@@ -1041,25 +1065,49 @@ Qed.
 Lemma Perm3_In : forall (X : Type) (x : X) (l1 l2 : list X),
     Perm3 l1 l2 -> In x l1 -> In x l2.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros X x l1 l2 E.
+  induction E.
+  - simpl. intros. destruct H.
+    * right. left. apply H.
+    * destruct H. left. apply H.
+      right. right. apply H.
+  - simpl. intros. rewrite (or_assoc (c=x) (b=x) False).
+    rewrite (or_comm (c=x) (b=x)).
+    rewrite (or_assoc (b=x) (c=x) False) in H. apply H.
+  - intros. apply IHE1 in H. apply IHE2 in H. apply H.
+Qed.
 
 (** **** Exercise: 1 star, standard, optional (Perm3_NotIn) *)
 Lemma Perm3_NotIn : forall (X : Type) (x : X) (l1 l2 : list X),
     Perm3 l1 l2 -> ~In x l1 -> ~In x l2.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros X x l1 l2 E. induction E.
+  - unfold "~". simpl. intros H1 H2.
+    apply H1. rewrite (or_assoc) in H2. rewrite (or_comm (b=x) (a=x)) in H2.
+    rewrite (or_assoc). apply H2.
+  - unfold "~". simpl. intros H1 H2.
+    apply H1. rewrite (or_assoc (c=x) (b=x) False) in H2.
+    rewrite (or_comm (c=x) (b=x)) in H2.
+    rewrite (or_assoc (b=x) (c=x) False). apply H2.
+  - intros. apply IHE1 in H. apply IHE2 in H. apply H.
+Qed.
 
 (** **** Exercise: 2 stars, standard, optional (NotPerm3)
 
     Proving that something is NOT a permutation is quite tricky. Some
     of the lemmas above, like [Perm3_In] can be useful for this. *)
+
+(* let us show that 4 is not present in first so it should not be present in second too which is false *)
 Example Perm3_example2 : ~ Perm3 [1;2;3] [1;2;4].
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
-
+  unfold "~". intros.
+  apply Perm3_NotIn with (x := 4) in H.
+  - unfold "~" in H. apply H. simpl.
+    right. right. left. reflexivity.
+  - unfold "~". intros.
+    simpl in H0. destruct H0. discriminate H0. destruct H0.
+    discriminate H0. destruct H0. discriminate H0. destruct H0.
+Qed.
 
 (* ################################################################# *)
 (** * Exercising with Inductive Relations *)
