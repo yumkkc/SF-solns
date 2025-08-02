@@ -968,7 +968,12 @@ Theorem ev_ev__ev : forall n m,
   (* Hint: There are two pieces of evidence you could attempt to induct upon
       here. If one doesn't work, try the other. *)
 Proof.
-
+  intros n m E1 E2.
+  induction E2 as [| m' E2' IH].
+  - simpl in E1. apply E1.
+  - simpl in E1. apply IH.
+    apply ev_SS in E1. apply SSSSev__even in E1.
+    apply E1. Qed.
 
 
 (** **** Exercise: 3 stars, standard, optional (ev_plus_plus)
@@ -980,8 +985,8 @@ Proof.
 Theorem ev_plus_plus : forall n m p,
   ev (n+m) -> ev (n+p) -> ev (m+p).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+
+Qed.
 
 (** **** Exercise: 4 stars, advanced, optional (ev'_ev)
 
