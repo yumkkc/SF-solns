@@ -1131,6 +1131,9 @@ Inductive le : nat -> nat -> Prop :=
 
 Notation "n <= m" := (le n m).
 
+Check le_n.
+Check le_S.
+
 (** (We've written the definition a bit differently this time,
     giving explicit names to the arguments to the constructors and
     moving them to the left of the colons.) *)
@@ -1200,9 +1203,15 @@ End Playground.
     practice exercises. *)
 
 (** **** Exercise: 3 stars, standard, especially useful (le_facts) *)
+
 Lemma le_trans : forall m n o, m <= n -> n <= o -> m <= o.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros m n o Hmn Hno.
+  induction Hno.
+  - apply Hmn.
+  - apply le_S in IHHno. apply IHHno.
+Qed.
+
 
 Theorem O_le_n : forall n,
   0 <= n.
