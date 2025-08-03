@@ -1212,7 +1212,6 @@ Proof.
   - apply le_S in IHHno. apply IHHno.
 Qed.
 
-
 Theorem O_le_n : forall n,
   0 <= n.
 Proof.
@@ -1787,6 +1786,8 @@ Lemma re_not_empty_correct : forall T (re : reg_exp T),
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
+
+(**  DO TILL HERE TODAY: AUGUST 3rd *))
 
 (* ================================================================= *)
 (** ** The [remember] Tactic *)
