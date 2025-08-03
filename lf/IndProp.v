@@ -1240,8 +1240,11 @@ Qed.
 Theorem le_plus_l : forall a b,
   a <= a + b.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros a b. induction b.
+  - rewrite add_comm. simpl. apply le_n.
+  - rewrite add_comm. simpl. apply le_S.
+    rewrite add_comm in IHb. apply IHb.
+Qed.    
 
 (** **** Exercise: 2 stars, standard, especially useful (plus_le_facts1) *)
 
@@ -1249,7 +1252,14 @@ Theorem plus_le : forall n1 n2 m,
   n1 + n2 <= m ->
   n1 <= m /\ n2 <= m.
 Proof.
- (* FILL IN HERE *) Admitted.
+ intros n1 n2 m Hnnm. split.
+ - induction Hnnm as [| m' E IH].
+   + apply le_plus_l.
+   + apply le_S. apply IH.
+ - induction Hnnm.
+   + rewrite add_comm. apply le_plus_l.
+   + apply le_S. apply IHHnnm.  
+ Qed.
 
 Theorem plus_le_cases : forall n m p q,
   n + m <= p + q -> n <= p \/ m <= q.
