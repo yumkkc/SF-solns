@@ -1215,17 +1215,27 @@ Qed.
 Theorem O_le_n : forall n,
   0 <= n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n. induction n.
+  apply le_n. apply le_S. apply IHn.
+Qed.
 
 Theorem n_le_m__Sn_le_Sm : forall n m,
   n <= m -> S n <= S m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m Hnm.
+  induction Hnm. apply le_n.
+  apply le_S. apply IHHnm.
+Qed.
 
 Theorem Sn_le_Sm__n_le_m : forall n m,
   S n <= S m -> n <= m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m H. induction m.
+  - inversion H. apply le_n. inversion H1.
+  - inversion H.
+    + apply le_n.
+    + apply le_S. apply IHm. apply H1.
+Qed.
 
 Theorem le_plus_l : forall a b,
   a <= a + b.
