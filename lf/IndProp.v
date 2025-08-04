@@ -1289,26 +1289,48 @@ Theorem plus_le_compat_l : forall n m p,
   n <= m ->
   p + n <= p + m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m p H.
+  induction p.
+  - simpl. apply H.
+  - simpl. apply n_le_m__Sn_le_Sm. apply IHp.
+Qed. 
 
 Theorem plus_le_compat_r : forall n m p,
   n <= m ->
   n + p <= m + p.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m p H.
+  rewrite add_comm with n p.
+  rewrite add_comm with m p.
+  apply plus_le_compat_l. apply H.
+Qed.
 
 Theorem le_plus_trans : forall n m p,
   n <= m ->
   n <= m + p.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros.
+  rewrite add_comm.
+  induction p.
+  - simpl. apply H.
+  - simpl. apply le_S. apply IHp.
+Qed.
 
 (** **** Exercise: 3 stars, standard, optional (lt_facts) *)
 Theorem lt_ge_cases : forall n m,
   n < m \/ n >= m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold "<". unfold ">=".
+  intros n m. induction m.
+  - right. apply O_le_n.
+  - destruct IHm.
+    + apply le_S in H. left. apply H.
+    + destruct H.
+      * left. apply le_n.
+      * right. apply n_le_m__Sn_le_Sm.
+        apply H.
+  Qed.
+
 
 Theorem n_lt_m__n_le_m : forall n m,
   n < m ->
@@ -1376,7 +1398,28 @@ Inductive R : nat -> nat -> nat -> Prop :=
       would the set of provable propositions change?  Briefly (1
       sentence) explain your answer. *)
 
-(* FILL IN HERE *)
+(*
+--------- c1
+R 0 0 0
+--------- c3
+R 0 1 1
+--------- c2
+R 1 1 2
+
+
+xxxxxx not proveable
+R 0 0 2
+------------ c2
+R 1 0 3
+------------ c2
+R 2 0 4
+------------ c3
+R 2 1 5
+------------ c3
+R 2 2 6
+
+With c4 and c5 removed, still [R 1 1 2] will be proveable and [R 2 2 6] will be unprobable.
+*)
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_R_provability : option (nat*string) := None.
