@@ -1261,13 +1261,28 @@ Proof.
    + apply le_S. apply IHHnnm.  
  Qed.
 
+
 Theorem plus_le_cases : forall n m p q,
   n + m <= p + q -> n <= p \/ m <= q.
   (** Hint: May be easiest to prove by induction on [n]. *)
 Proof.
-(* FILL IN HERE *) Admitted.
-(** [] *)
-
+  induction n.
+  - intros. simpl in H. left. apply O_le_n.
+    (* I have a choice here to destruct  or simplu applu plus_le.
+       i only need plus_le in p = 0 case to match m <= p *)
+  - intros. destruct p.
+    + apply plus_le in H.
+      destruct H as [H1 H2]. right. simpl in H2.
+      apply H2.
+    + simpl in H.
+      (* to apply Inductive hypothesis *)
+      rewrite plus_n_Sm with n m in H.
+      rewrite plus_n_Sm with p q in H.
+      apply IHn in H. destruct H.
+      * left. apply n_le_m__Sn_le_Sm. apply H.
+      * right. apply Sn_le_Sm__n_le_m. apply H.
+Qed.
+  
 (** **** Exercise: 2 stars, standard, especially useful (plus_le_facts2) *)
 
 Theorem plus_le_compat_l : forall n m p,
