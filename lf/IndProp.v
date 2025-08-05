@@ -1432,13 +1432,34 @@ Definition manual_grade_for_R_provability : option (nat*string) := None.
     in Coq. *)
 
 Definition fR : nat -> nat -> nat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *):= plus.
+
+Check fR.
+Check R.
 
 Theorem R_equiv_fR : forall m n o, R m n o <-> fR m n = o.
 Proof.
-(* FILL IN HERE *) Admitted.
-(** [] *)
-
+  split.
+  - intros H. induction H.
+    + reflexivity.
+    + simpl. f_equal. apply IHR.
+    + unfold fR. unfold fR in IHR.
+      rewrite add_comm. simpl. f_equal.
+      rewrite add_comm in IHR. apply IHR.
+    + simpl in IHR. unfold fR in IHR.
+      unfold fR. rewrite <- plus_n_Sm in IHR.
+       injection IHR as goal. apply goal.
+    + unfold fR. unfold fR in IHR.
+      rewrite add_comm. apply IHR.
+  - unfold fR. intros.
+    destruct H.
+    (* destruct makes H redundent after replacing o with m + n *)
+    induction m.
+    +  induction n. apply c1. simpl. apply c3.
+       simpl in IHn. apply IHn.
+    + simpl. apply c2. apply IHm.
+Qed.
+    
 End R.
 
 (** **** Exercise: 4 stars, advanced (subsequence)
