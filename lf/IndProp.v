@@ -982,7 +982,6 @@ Proof.
     But, you will need a clever assertion and some tedious rewriting.
     Hint: Is [(n+m) + (n+p)] even? *)
 
-Set Printing Parentheses.
 Theorem ev_plus_plus : forall n m p,
   ev (n+m) -> ev (n+p) -> ev (m+p).
 Proof.
@@ -1686,13 +1685,24 @@ Example reg_exp_ex1 : [1] =~ Char 1.
 Proof.
   apply MChar.
 Qed.
-
+Check MApp.
 Example reg_exp_ex2 : [1; 2] =~ App (Char 1) (Char 2).
 Proof.
   apply (MApp [1]).
   - apply MChar.
   - apply MChar.
 Qed.
+
+Example re_text : [1] ++ [1] =~ Star (Char 1).
+Proof.
+  apply MStarApp.
+  - apply MChar.
+  - rewrite <- (app_nil_r _ _).
+    apply MStarApp.
+    ++ apply MChar.
+    ++ apply MStar0.
+Qed. 
+  
 
 (** (Notice how the last example applies [MApp] to the string
     [[1]] directly.  Since the goal mentions [[1; 2]] instead of
@@ -1732,7 +1742,7 @@ Qed.
 (** We can also prove general facts about [exp_match].  For instance,
     the following lemma shows that every string [s] that matches [re]
     also matches [Star re]. *)
-
+Check app_nil_r.
 Lemma MStar1 :
   forall T s (re : reg_exp T) ,
     s =~ re ->
@@ -1757,13 +1767,18 @@ Qed.
 Lemma EmptySet_is_empty : forall T (s : list T),
   ~ (s =~ EmptySet).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros Y s H.
+  inversion H.
+Qed.
 
 Lemma MUnion' : forall T (s : list T) (re1 re2 : reg_exp T),
   s =~ re1 \/ s =~ re2 ->
   s =~ Union re1 re2.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros. destruct H.
+  - apply MUnionL. apply H.
+  - apply MUnionR. apply H.
+Qed.
 
 (** The next lemma is stated in terms of the [fold] function from the
     [Poly] chapter: If [ss : list (list T)] represents a sequence of
@@ -1774,23 +1789,43 @@ Lemma MStar' : forall T (ss : list (list T)) (re : reg_exp T),
   (forall s, In s ss -> s =~ re) ->
   fold app ss [] =~ Star re.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros.
+  (* this Theorem means that if SS is formed by s and s is recognized by
+regex re, then the fold of that SS is Star re *)
+  induction ss.
+  - simpl. apply MStar0.
+  - simpl. apply MStarApp.
+    + simpl in H. apply H.
+      left. reflexivity.
+    + apply IHss. 
+      intros.
+      apply H. simpl.
+      right. apply H0.
+Qed.
 
 (** **** Exercise: 2 stars, standard, optional (EmptyStr_not_needed)
 
     It turns out that the [EmptyStr] constructor is actually not
    needed, since the regular expression matching the empty string can
    also be defined from [Star] and [EmptySet]: *)
+
 Definition EmptyStr' {T:Type} := @Star T (EmptySet).
 
 (** State and prove that this [EmptyStr'] definition matches exactly
    the same strings as the [EmptyStr] constructor. *)
 
-(* FILL IN HERE
-
-    [] *)
-
+Lemma EmptyStrEmptyStar : forall T (s : list T),
+    s =~ EmptyStr <-> s =~EmptyStr'.
+Proof. intros. split.
+       - intros. induction s.
+         ++ unfold EmptyStr'. apply MStar0.
+         ++ inversion H.
+      - intros.  inversion H.
+        + apply MEmpty.
+        + apply EmptySet_is_empty in H2.
+          destruct H2.
+  Qed.
+          
 (** Since the definition of [exp_match] has a recursive
     structure, we might expect that proofs involving regular
     expressions will often require induction on evidence. *)
@@ -1812,6 +1847,8 @@ Fixpoint re_chars {T} (re : reg_exp T) : list T :=
   | Union re1 re2 => re_chars re1 ++ re_chars re2
   | Star re => re_chars re
   end.
+
+Compute re_chars (Union (Char [1]) (Char [2])).
 
 (** The main theorem: *)
 
