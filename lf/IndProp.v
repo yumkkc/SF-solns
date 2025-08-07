@@ -1914,16 +1914,31 @@ Qed.
     regular expression matches some string. Prove that your function
     is correct. *)
 
-Fixpoint re_not_empty {T : Type} (re : reg_exp T) : bool
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Fixpoint re_not_empty {T : Type} (re : reg_exp T) : bool :=
+  match re with
+  | EmptySet => false  
+  | EmptyStr => true
+  | Char x => true 
+  | App re1 re2 => andb (re_not_empty re1) (re_not_empty re2) 
+  | Union re1 re2 => orb (re_not_empty re1) (re_not_empty re2) 
+  | Star _ => re_not_empty true
+  end. 
+
 
 Lemma re_not_empty_correct : forall T (re : reg_exp T),
   (exists s, s =~ re) <-> re_not_empty re = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros. split.
+  - intros.
+    induction re.
+    + simpl. destruct H. inversion H.
+    + simpl. reflexivity.
+    + simpl. reflexivity.
+    + simpl. apply andb_true_iff.
+      split.
+      ++ apply IHre1.
+  
 
-(**  DO TILL HERE TODAY: AUGUST 3rd *))
 
 (* ================================================================= *)
 (** ** The [remember] Tactic *)
