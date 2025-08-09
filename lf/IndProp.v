@@ -2223,6 +2223,7 @@ Lemma weak_pumping : forall T (re : reg_exp T) s,
 (** Complete the proof below. Several of the lemmas about [le] that
     were in an optional exercise earlier in this chapter may also be
     useful. *)
+
 Proof.
   intros T re s Hmatch.
   induction Hmatch
@@ -2232,8 +2233,10 @@ Proof.
   - (* MEmpty *)
     simpl. intros contra. inversion contra.
   - simpl. intros contra. inversion contra. inversion H0.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  - simpl. intros. apply le_trans with (m := pumping_constant re2) in H.
+    Admitted.
+
+  (** [] *)
 
 (** **** Exercise: 5 stars, advanced, optional (pumping)
 
@@ -2271,7 +2274,6 @@ End Pumping.
     need to relate boolean computations to statements in [Prop].  But
     performing this conversion as we did there can result in tedious
     proof scripts.  Consider the proof of the following theorem: *)
-
 Theorem filter_not_empty_In : forall n l,
   filter (fun x => n =? x) l <> [] -> In n l.
 Proof.
@@ -2308,7 +2310,7 @@ Qed.
 Inductive reflect (P : Prop) : bool -> Prop :=
   | ReflectT (H :   P) : reflect P true
   | ReflectF (H : ~ P) : reflect P false.
-
+Check ReflectT.
 (** The [reflect] property takes two arguments: a proposition
     [P] and a boolean [b].  It states that the property [P]
     _reflects_ (intuitively, is equivalent to) the boolean [b]: that
@@ -2340,8 +2342,14 @@ Qed.
 (** **** Exercise: 2 stars, standard, especially useful (reflect_iff) *)
 Theorem reflect_iff : forall P b, reflect P b -> (P <-> b = true).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+  intros. inversion H.
+  - split.
+    + reflexivity.
+    + intros. apply H0.
+  - split.
+    + intros. exfalso. unfold "~" in H0. apply H0. apply H2.
+    + intros. discriminate H2.
+Qed.
 
 (** We can think of [reflect] as a variant of the usual "if and only
     if" connective; the advantage of [reflect] is that, by destructing
@@ -2399,7 +2407,19 @@ Theorem eqbP_practice : forall n l,
   count n l = 0 -> ~(In n l).
 Proof.
   intros n l Hcount. induction l as [| m l' IHl'].
-  (* FILL IN HERE *) Admitted.
+  - unfold "~". intros. inversion H.
+  - simpl in Hcount. destruct (eqbP n m).
+    + inversion Hcount.
+    + intros contra.
+      destruct contra as [H1 | H2].
+      * symmetry in H1. apply (H H1).
+      * apply (IHl' Hcount H2).
+      (*
+apply (IHl' Hcount H2).
+in equivalent to
+apply IHl' in Hcount. apply Hcount. apply H2.
+*)
+    
 (** [] *)
 
 (** This small example shows reflection giving us a small gain in
