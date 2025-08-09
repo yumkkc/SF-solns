@@ -1919,9 +1919,9 @@ Fixpoint re_not_empty {T : Type} (re : reg_exp T) : bool :=
   | EmptySet => false  
   | EmptyStr => true
   | Char x => true 
-  | App re1 re2 => andb (re_not_empty re1) (re_not_empty re2) 
-  | Union re1 re2 => orb (re_not_empty re1) (re_not_empty re2) 
-  | Star _ => re_not_empty true
+  | App re1 re2 =>  (re_not_empty re1) && (re_not_empty re2) 
+  | Union re1 re2 => (re_not_empty re1) || (re_not_empty re2) 
+  | Star re => true
   end. 
 
 
@@ -1929,15 +1929,38 @@ Lemma re_not_empty_correct : forall T (re : reg_exp T),
   (exists s, s =~ re) <-> re_not_empty re = true.
 Proof.
   intros. split.
-  - intros.
-    induction re.
-    + simpl. destruct H. inversion H.
+  - intros. destruct H.
+    induction H.
     + simpl. reflexivity.
     + simpl. reflexivity.
     + simpl. apply andb_true_iff.
       split.
-      ++ apply IHre1.
-  
+      * apply IHexp_match1.
+      * apply IHexp_match2.
+    + simpl. apply orb_true_iff.
+      left. apply IHexp_match.
+    + simpl. apply orb_true_iff.
+      right. apply IHexp_match.
+    + simpl. reflexivity.
+    + simpl. reflexivity.
+  - intros. induction re.
+    + simpl in H. discriminate H.
+    + exists []. apply MEmpty.
+    + exists ([t]). apply MChar.
+    + simpl in H. apply andb_true_iff in H.
+      destruct H as [H1 H2].
+      apply IHre1 in H1. apply IHre2 in H2.
+      destruct H1. destruct H2.
+      exists (x ++ x0). apply MApp.
+      apply H. apply H0.
+    + simpl in H. apply orb_true_iff in H.
+      destruct H.
+      * apply IHre1 in H. destruct H.
+        exists x. apply MUnionL. apply H.
+      * apply IHre2 in H. destruct H.
+        exists x. apply MUnionR. apply H.
+    + exists []. apply MStar0.
+  Qed.
 
 
 (* ================================================================= *)
@@ -2005,7 +2028,6 @@ Lemma star_app: forall T (s1 s2 : list T) (re re' : reg_exp T),
   s1 =~ re' ->
   s2 =~ Star re ->
   s1 ++ s2 =~ Star re.
-
 (** We can now proceed by performing induction over evidence
     directly, because the argument to the first hypothesis is
     sufficiently general, which means that we can discharge most cases
@@ -2110,18 +2132,18 @@ Fixpoint pumping_constant {T} (re : reg_exp T) : nat :=
 
 (** You may find these lemmas about the pumping constant useful when
     proving the pumping lemma below. *)
-
+Check le_trans.
 Lemma pumping_constant_ge_1 :
   forall T (re : reg_exp T),
     pumping_constant re >= 1.
 Proof.
   intros T re. induction re.
   - (* EmptySet *)
-    apply le_n.
+    simpl. apply le_n.
   - (* EmptyStr *)
     apply le_n.
   - (* Char *)
-    apply le_S. apply le_n.
+    simpl. apply le_S. apply le_n.
   - (* App *)
     simpl.
     apply le_trans with (n:=pumping_constant re1).
@@ -2178,6 +2200,8 @@ Proof.
     + apply Hs1.
     + apply IHm.
 Qed.
+(* the above says that we can repeat s1 infinite times and do ++ with s2 recognised by Star re
+the the result str is recognised by Star re *)
 
 (** The (weak) pumping lemma itself says that, if [s =~ re] and if the
     length of [s] is at least the pumping constant of [re], then [s]
@@ -2207,6 +2231,7 @@ Proof.
        | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2 ].
   - (* MEmpty *)
     simpl. intros contra. inversion contra.
+  - simpl. intros contra. inversion contra. inversion H0.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
